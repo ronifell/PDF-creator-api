@@ -64,6 +64,8 @@ export async function generateReportPdf(payload: ReportPayload): Promise<Buffer>
     await page.setContent(html, { waitUntil: 'networkidle', timeout: 30_000 });
 
     // Wait for fonts & images to be ready (best-effort).
+    // Use a generous per-image timeout because remote vehicle CDNs (e.g.
+    // UKVehicleData) can be slow to respond on cold connections.
     await page.evaluate(async () => {
       const docAny = document as Document & { fonts?: { ready?: Promise<unknown> } };
       if (docAny.fonts?.ready) {
@@ -71,15 +73,18 @@ export async function generateReportPdf(payload: ReportPayload): Promise<Buffer>
       }
       const imgs = Array.from(document.querySelectorAll('img'));
       await Promise.all(
-        imgs.map((img) =>
-          (img as HTMLImageElement).complete
-            ? Promise.resolve()
-            : new Promise<void>((resolve) => {
-                img.addEventListener('load', () => resolve(), { once: true });
-                img.addEventListener('error', () => resolve(), { once: true });
-                setTimeout(() => resolve(), 4_000);
-              }),
-        ),
+        imgs.map((img) => {
+          const i = img as HTMLImageElement;
+          if (i.complete && i.naturalWidth > 0) return Promise.resolve();
+          return new Promise<void>((resolve) => {
+            const done = () => resolve();
+            i.addEventListener('load', done, { once: true });
+            i.addEventListener('error', done, { once: true });
+            // 10s is well within the overall PDF generation budget but plenty
+            // of time for slow CDNs.
+            setTimeout(done, 10_000);
+          });
+        }),
       );
     });
 

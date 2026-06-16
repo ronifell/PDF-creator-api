@@ -230,15 +230,26 @@ tbody tr:last-child td { border-bottom: none; }
 
 /* Hero vehicle image card (own row) */
 .vehicle-image-block {
+  position: relative;
   width: 100%;
-  height: 150px;
+  height: 170px;
   background: var(--secondary);
   border-radius: var(--radius);
   border: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center;
   overflow: hidden;
 }
-.vehicle-image-block img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.vehicle-image-block img {
+  max-width: 92%; max-height: 92%; object-fit: contain;
+  display: block;
+}
+.vehicle-image-block .vehicle-image-fallback {
+  display: none;
+  flex-direction: column; align-items: center; gap: 6px;
+  text-align: center;
+}
+/* When <img> errors and class image-missing is added, swap to the fallback */
+.vehicle-image-block.image-missing .vehicle-image-fallback { display: flex; }
 
 /* UK number plate */
 .plate {

@@ -217,9 +217,15 @@ export function renderCover(payload: ReportPayload): string {
     ${
       payload.image_url || payload.report_data?.images?.primary
         ? `<section class="section no-break">
-            <div class="vehicle-image-block">
+            <div class="vehicle-image-block" data-vrm="${escAttr(vrm)}">
               <img src="${escAttr(payload.image_url || payload.report_data?.images?.primary || '')}"
-                   alt="${escAttr(`${make} ${model}`)}" crossorigin="anonymous" />
+                   alt="${escAttr(`${year} ${make} ${model} stock photo`)}"
+                   referrerpolicy="no-referrer"
+                   onerror="this.closest('.vehicle-image-block')?.classList.add('image-missing'); this.remove();" />
+              <div class="vehicle-image-fallback">
+                <span class="badge solid-primary">PHOTO UNAVAILABLE</span>
+                <div class="text-muted small">${escAttr(`${year} ${make} ${model}`.trim())}</div>
+              </div>
             </div>
           </section>`
         : ''
