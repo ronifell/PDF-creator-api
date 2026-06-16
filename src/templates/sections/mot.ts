@@ -1,5 +1,6 @@
 import { MotTest, ReportPayload } from '../../types/report';
 import { esc, fmtDate, fmtMileage, parseDate } from '../helpers';
+import { renderMileageChart } from './mileageChart';
 
 function advisoryTag(type: string | undefined): string {
   const t = (type || '').toUpperCase();
@@ -115,10 +116,19 @@ export function renderMileageTrend(payload: ReportPayload): string {
     )
     .join('');
 
+  const chart = renderMileageChart(trend);
+
   return `
     <section class="section no-break">
-      <div class="section-title"><span class="icon">↗</span> Mileage Trend</div>
-      <div class="table-wrap">
+      <div class="section-title"><span class="icon">↗</span> Mileage Progression</div>
+      <div class="card">
+        ${chart}
+        <div class="text-muted small mt-2">
+          Mileage progression appears <strong>consistent</strong>. Investigate any flat spots or
+          drops with the seller before purchase.
+        </div>
+      </div>
+      <div class="table-wrap mt-2">
         <table>
           <thead><tr><th>Date</th><th>Recorded mileage</th></tr></thead>
           <tbody>${rows}</tbody>

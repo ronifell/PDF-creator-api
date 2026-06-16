@@ -42,12 +42,16 @@ html, body {
   print-color-adjust: exact;
 }
 
-/* Print page setup. The actual margins are controlled by Playwright's
-   pdf({ margin }) so that the header/footer template has room. */
-@page { size: A4; margin: 0; }
+/* Print page setup.
+ * CSS @page margins MUST match Playwright's pdf({ margin }) values, otherwise
+ * the header/footer templates render INSIDE the body content area. The header
+ * template is rendered by Chromium within the @page top margin; body content
+ * starts immediately after.
+ */
+@page { size: A4; margin: 28mm 10mm 20mm 10mm; }
 
 .page {
-  padding: 4mm 2mm 4mm;
+  /* No extra padding here — @page margin handles spacing from the page edge. */
 }
 
 /* ---------- Typography ---------- */
@@ -180,57 +184,61 @@ tbody tr:last-child td { border-bottom: none; }
 /* ---------- Cover ---------- */
 .cover {
   position: relative;
-  padding: 18px 16px 16px;
+  padding: 14px 16px 14px;
   border-radius: var(--radius-lg);
   background: linear-gradient(135deg, #163B5F 0%, #1F4F7E 65%, #2C5C8C 100%);
   color: #FFFFFF;
   overflow: hidden;
 }
-.cover .brand-row {
+.cover .cover-bar {
   display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 18px;
+  gap: 12px;
 }
 .cover .brand {
   display: inline-flex; align-items: center; gap: 8px;
-  font-weight: 800; font-size: 16pt; letter-spacing: -0.02em;
 }
 .cover .brand .logo-dot {
-  width: 22px; height: 22px; border-radius: 6px; background: var(--accent);
+  width: 18px; height: 18px; border-radius: 5px; background: var(--accent);
 }
-.cover .meta {
-  font-size: 9pt; opacity: 0.85; text-align: right;
+.cover .brand .brand-name {
+  font-weight: 800; font-size: 14pt; letter-spacing: -0.02em;
 }
-.cover .title-row {
-  display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; align-items: end;
+.cover .brand .brand-sub {
+  opacity: 0.85; font-size: 9pt; padding-left: 4px;
 }
-.cover h1 { color: #FFFFFF; font-size: 24pt; line-height: 1.15; }
-.cover .sub { font-size: 11pt; opacity: 0.9; margin-top: 6px; }
-.cover .vehicle-image {
+.cover .plate-wrap {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+}
+.cover .plate-label {
+  font-size: 7pt; opacity: 0.75; letter-spacing: 0.12em; text-transform: uppercase;
+}
+
+.cover .cover-title {
+  margin-top: 12px;
+  display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px; align-items: end;
+}
+.cover h1 { color: #FFFFFF; font-size: 20pt; line-height: 1.12; }
+.cover .sub { font-size: 10.5pt; opacity: 0.9; margin-top: 4px; }
+.cover .meta { font-size: 8.5pt; opacity: 0.85; margin-top: 8px; }
+.cover .hero-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.cover .hero-stat {
+  background: #FFFFFF14; border: 1px solid #FFFFFF22; border-radius: var(--radius);
+  padding: 6px 10px;
+}
+.cover .hero-stat .label { font-size: 7.5pt; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.06em; }
+.cover .hero-stat .value { font-size: 11pt; font-weight: 700; margin-top: 1px; }
+
+/* Hero vehicle image card (own row) */
+.vehicle-image-block {
   width: 100%;
-  height: 130px;
-  background: #FFFFFF18;
+  height: 150px;
+  background: var(--secondary);
   border-radius: var(--radius);
+  border: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center;
   overflow: hidden;
-  border: 1px solid #FFFFFF22;
 }
-.cover .vehicle-image img { max-width: 100%; max-height: 100%; object-fit: contain; }
-.cover .vehicle-image .placeholder { font-size: 9pt; opacity: 0.7; }
-
-.cover .stat-strip {
-  margin-top: 14px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-.cover .stat {
-  background: #FFFFFF14;
-  border: 1px solid #FFFFFF22;
-  border-radius: var(--radius);
-  padding: 8px 10px;
-}
-.cover .stat .label { font-size: 8pt; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.06em; }
-.cover .stat .value { font-size: 12pt; font-weight: 700; margin-top: 2px; }
+.vehicle-image-block img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
 /* UK number plate */
 .plate {
@@ -240,13 +248,58 @@ tbody tr:last-child td { border-bottom: none; }
   font-family: 'JetBrains Mono', 'Menlo', monospace;
   font-weight: 800;
   letter-spacing: 0.08em;
-  font-size: 18pt;
-  padding: 4px 12px;
-  border-radius: 6px;
+  font-size: 16pt;
+  padding: 3px 10px;
+  border-radius: 5px;
   border: 2px solid #111827;
   box-shadow: 0 1px 0 #00000022;
 }
-.plate.sm { font-size: 11pt; padding: 2px 8px; border-width: 1.5px; }
+.plate.sm { font-size: 10pt; padding: 2px 6px; border-width: 1.5px; }
+
+/* ---------- Findings cards ---------- */
+.findings-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+}
+.finding {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  padding: 8px 10px;
+  break-inside: avoid;
+  border-left-width: 4px;
+}
+.finding.ok   { border-left-color: var(--success); }
+.finding.warn { border-left-color: var(--accent); }
+.finding.fail { border-left-color: var(--destructive); }
+.finding .label {
+  font-size: 7.5pt; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.06em;
+}
+.finding .value {
+  font-size: 10.5pt; font-weight: 700; margin-top: 2px;
+}
+.finding.ok .value   { color: var(--success); }
+.finding.warn .value { color: #8A6500; }
+.finding.fail .value { color: var(--destructive); }
+
+/* ---------- Observations ---------- */
+.observations { display: flex; flex-direction: column; gap: 6px; }
+.observation {
+  display: flex; gap: 8px; align-items: flex-start;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 7px 10px;
+  font-size: 9.5pt;
+}
+.observation .dot {
+  flex: 0 0 8px; height: 8px; border-radius: 999px; margin-top: 5px;
+}
+.observation.ok   { background: #F1F9F2; border-color: #BFDFC2; }
+.observation.ok   .dot { background: var(--success); }
+.observation.warn { background: #FFF9E5; border-color: #F2DA92; }
+.observation.warn .dot { background: var(--accent); }
+.observation.fail { background: #FCEFEF; border-color: #EFB6B6; }
+.observation.fail .dot { background: var(--destructive); }
 
 /* ---------- Status banner ---------- */
 .status-banner {
@@ -340,6 +393,9 @@ tbody tr:last-child td { border-bottom: none; }
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
+/* Mileage chart */
+.mileage-chart { width: 100%; height: auto; max-height: 220px; display: block; }
+
 .damage-diagram-wrap {
   display: flex; align-items: center; justify-content: center;
   background: var(--secondary);
@@ -348,11 +404,13 @@ tbody tr:last-child td { border-bottom: none; }
   padding: 8px;
   min-height: 180px;
 }
-.damage-diagram { width: 100%; height: auto; max-height: 220px; }
-/* Damage region states inside the SVG */
-.damage-diagram .region { fill: #DDE2EA; stroke: #B7BDC8; stroke-width: 1; transition: none; }
-.damage-diagram .region.hit { fill: #C72929; stroke: #7F1717; }
-.damage-diagram .region.hit-secondary { fill: #F5B400; stroke: #9C7300; }
+.damage-diagram { width: 100%; height: auto; max-height: 260px; }
+/* Damage region states inside the SVG.
+   Non-hit regions are transparent so the car silhouette shows through.
+   Hit regions get a flat red wash with a darker outline. */
+.damage-diagram .region { fill: transparent; stroke: transparent; }
+.damage-diagram .region.hit { fill: #C72929; stroke: #7F1717; stroke-width: 1; }
+.damage-diagram .region.hit-secondary { fill: #F5B400; stroke: #9C7300; stroke-width: 1; }
 
 /* ---------- Equipment ---------- */
 .equip-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }

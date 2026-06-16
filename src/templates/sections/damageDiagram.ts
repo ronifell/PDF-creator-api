@@ -1,20 +1,23 @@
 /**
  * Inline SVG damage diagram for the write-off section.
  *
- * The regions correspond to the standard UK damage-area vocabulary used by
- * the MIAFTR feed. The matcher is intentionally fuzzy — area labels may be
- * "Front offside", "Nearside", "Rear N/S", "Roof", etc.
+ * Drawn as a top-down car silhouette in CSS-friendly SVG (no external assets).
+ * Damage regions match the standard UK MIAFTR vocabulary:
+ *   - Front, Front offside, Front nearside
+ *   - Rear, Rear offside, Rear nearside
+ *   - Offside, Nearside
+ *   - Roof, Underbody
  */
 
 import { normaliseArea } from '../helpers';
 
 const REGION_MATCHERS: { id: string; tests: RegExp[] }[] = [
-  { id: 'front',           tests: [/^front$/, /^front-centre$/, /front$/] },
   { id: 'front-offside',   tests: [/front.*offside/, /offside.*front/, /front.*o-s/, /o-s.*front/] },
   { id: 'front-nearside',  tests: [/front.*nearside/, /nearside.*front/, /front.*n-s/, /n-s.*front/] },
-  { id: 'rear',            tests: [/^rear$/, /^rear-centre$/, /rear$/] },
+  { id: 'front',           tests: [/^front$/, /^front-centre$/, /\bfront\b/] },
   { id: 'rear-offside',    tests: [/rear.*offside/, /offside.*rear/, /rear.*o-s/, /o-s.*rear/] },
   { id: 'rear-nearside',   tests: [/rear.*nearside/, /nearside.*rear/, /rear.*n-s/, /n-s.*rear/] },
+  { id: 'rear',            tests: [/^rear$/, /^rear-centre$/, /\brear\b/] },
   { id: 'offside',         tests: [/^offside$/, /^o-s$/, /right-side/, /driver-side/] },
   { id: 'nearside',        tests: [/^nearside$/, /^n-s$/, /left-side/, /passenger-side/] },
   { id: 'roof',            tests: [/roof/, /top/] },
@@ -27,7 +30,11 @@ function regionsToHighlight(damageAreas: string[]): Set<string> {
     const v = normaliseArea(raw);
     if (!v) continue;
     for (const r of REGION_MATCHERS) {
-      if (r.tests.some((rx) => rx.test(v))) ids.add(r.id);
+      if (r.tests.some((rx) => rx.test(v))) {
+        ids.add(r.id);
+        // First match wins so "front offside" doesn't also mark plain "front"
+        break;
+      }
     }
   }
   return ids;
@@ -35,76 +42,106 @@ function regionsToHighlight(damageAreas: string[]): Set<string> {
 
 export function renderDamageDiagram(damageAreas: string[]): string {
   const hits = regionsToHighlight(damageAreas);
-  const cls = (id: string) => `region${hits.has(id) ? ' hit' : ''}`;
+  const hit = (id: string) => (hits.has(id) ? 'hit' : '');
 
+  // Geometry: a stylised but car-shaped top-down silhouette.
+  // viewBox is tall — fits comfortably alongside the write-off cards.
   return /* html */ `
-    <svg class="damage-diagram" viewBox="0 0 360 600" xmlns="http://www.w3.org/2000/svg" aria-label="Damage diagram">
+    <svg class="damage-diagram" viewBox="0 0 320 560" xmlns="http://www.w3.org/2000/svg"
+         preserveAspectRatio="xMidYMid meet" aria-label="Damage diagram">
       <title>Vehicle damage diagram</title>
 
-      <!-- Body outline -->
+      <!-- Base car silhouette: outer body + smaller cabin -->
       <g>
-        <rect x="80" y="40" width="200" height="520" rx="60" ry="60"
-              fill="#FFFFFF" stroke="#163B5F" stroke-width="2"/>
+        <!-- Body outline -->
+        <path d="
+          M 90 40
+          Q 160 14, 230 40
+          L 250 80
+          C 260 130, 264 230, 264 280
+          C 264 330, 260 430, 250 480
+          L 230 520
+          Q 160 546, 90 520
+          L 70 480
+          C 60 430, 56 330, 56 280
+          C 56 230, 60 130, 70 80
+          Z"
+          fill="#FFFFFF" stroke="#163B5F" stroke-width="2" stroke-linejoin="round" />
 
-        <!-- Windscreen -->
-        <path d="M110 130 L250 130 L240 180 L120 180 Z" fill="#E6EEF6" stroke="#B9CADC"/>
-        <!-- Rear glass -->
-        <path d="M120 470 L240 470 L250 510 L110 510 Z" fill="#E6EEF6" stroke="#B9CADC"/>
+        <!-- Windshield (front) -->
+        <path d="M 110 130 Q 160 110, 210 130 L 198 180 L 122 180 Z"
+              fill="#DDE6F0" stroke="#A8BAD0" stroke-width="1" />
+        <!-- Rear window -->
+        <path d="M 122 430 L 198 430 L 210 480 Q 160 500, 110 480 Z"
+              fill="#DDE6F0" stroke="#A8BAD0" stroke-width="1" />
+        <!-- Roof panel (between windows) -->
+        <rect x="116" y="190" width="88" height="230" rx="14" fill="#F5F7FA" stroke="#D1D4DC"/>
+
+        <!-- Side mirrors -->
+        <rect x="76"  y="195" width="14" height="8" rx="2" fill="#163B5F"/>
+        <rect x="230" y="195" width="14" height="8" rx="2" fill="#163B5F"/>
 
         <!-- Wheels -->
-        <rect x="68"  y="140" width="22" height="50" rx="6" fill="#111827"/>
-        <rect x="270" y="140" width="22" height="50" rx="6" fill="#111827"/>
-        <rect x="68"  y="430" width="22" height="50" rx="6" fill="#111827"/>
-        <rect x="270" y="430" width="22" height="50" rx="6" fill="#111827"/>
+        <rect x="48"  y="155" width="14" height="42" rx="4" fill="#1F2937"/>
+        <rect x="258" y="155" width="14" height="42" rx="4" fill="#1F2937"/>
+        <rect x="48"  y="415" width="14" height="42" rx="4" fill="#1F2937"/>
+        <rect x="258" y="415" width="14" height="42" rx="4" fill="#1F2937"/>
 
         <!-- Headlights -->
-        <rect x="100" y="60" width="40" height="14" rx="4" fill="#F5B400" opacity="0.6"/>
-        <rect x="220" y="60" width="40" height="14" rx="4" fill="#F5B400" opacity="0.6"/>
+        <rect x="105" y="56" width="32" height="10" rx="3" fill="#F5B400" opacity="0.65"/>
+        <rect x="183" y="56" width="32" height="10" rx="3" fill="#F5B400" opacity="0.65"/>
+        <!-- Bonnet line -->
+        <path d="M 100 95 L 220 95" stroke="#D1D4DC" stroke-dasharray="3 3"/>
+        <!-- Boot line -->
+        <path d="M 100 460 L 220 460" stroke="#D1D4DC" stroke-dasharray="3 3"/>
 
         <!-- Tail lights -->
-        <rect x="100" y="528" width="40" height="14" rx="4" fill="#C72929" opacity="0.6"/>
-        <rect x="220" y="528" width="40" height="14" rx="4" fill="#C72929" opacity="0.6"/>
+        <rect x="105" y="494" width="32" height="10" rx="3" fill="#C72929" opacity="0.65"/>
+        <rect x="183" y="494" width="32" height="10" rx="3" fill="#C72929" opacity="0.65"/>
+
+        <!-- Door split lines -->
+        <line x1="116" y1="278" x2="204" y2="278" stroke="#D1D4DC" stroke-dasharray="2 3"/>
       </g>
 
-      <!-- Regions (clickable hit areas) -->
-      <g>
-        <!-- Front corners + centre -->
-        <path id="front-nearside" class="${cls('front-nearside')}"
-              d="M80 100 Q80 65, 140 50 L180 50 L180 110 L80 110 Z" opacity="0.55"/>
-        <path id="front-offside" class="${cls('front-offside')}"
-              d="M280 100 Q280 65, 220 50 L180 50 L180 110 L280 110 Z" opacity="0.55"/>
-        <rect id="front" class="${cls('front')}" x="120" y="50" width="120" height="18" opacity="0.55"/>
+      <!-- Damage regions (overlaid, semi-transparent so silhouette is still visible) -->
+      <g opacity="0.78">
+        <!-- Front corners -->
+        <path id="front-nearside" class="region ${hit('front-nearside')}"
+              d="M 70 80 Q 70 38, 130 30 L 160 30 L 160 96 L 80 96 Z" />
+        <path id="front-offside" class="region ${hit('front-offside')}"
+              d="M 250 80 Q 250 38, 190 30 L 160 30 L 160 96 L 240 96 Z" />
+        <path id="front" class="region ${hit('front')}"
+              d="M 110 40 Q 160 22, 210 40 L 220 90 L 100 90 Z" />
 
-        <!-- Side panels -->
-        <rect id="nearside" class="${cls('nearside')}" x="80" y="200" width="40" height="240" opacity="0.55"/>
-        <rect id="offside"  class="${cls('offside')}"  x="240" y="200" width="40" height="240" opacity="0.55"/>
+        <!-- Rear corners -->
+        <path id="rear-nearside" class="region ${hit('rear-nearside')}"
+              d="M 70 480 Q 70 522, 130 530 L 160 530 L 160 464 L 80 464 Z" />
+        <path id="rear-offside" class="region ${hit('rear-offside')}"
+              d="M 250 480 Q 250 522, 190 530 L 160 530 L 160 464 L 240 464 Z" />
+        <path id="rear" class="region ${hit('rear')}"
+              d="M 110 520 Q 160 538, 210 520 L 220 470 L 100 470 Z" />
 
-        <!-- Rear corners + centre -->
-        <path id="rear-nearside" class="${cls('rear-nearside')}"
-              d="M80 500 Q80 540, 140 555 L180 555 L180 490 L80 490 Z" opacity="0.55"/>
-        <path id="rear-offside" class="${cls('rear-offside')}"
-              d="M280 500 Q280 540, 220 555 L180 555 L180 490 L280 490 Z" opacity="0.55"/>
-        <rect id="rear" class="${cls('rear')}" x="120" y="540" width="120" height="18" opacity="0.55"/>
+        <!-- Side panels (long mid-section) -->
+        <path id="nearside" class="region ${hit('nearside')}"
+              d="M 56 120 L 90 120 L 90 440 L 60 440 C 56 380, 56 200, 56 120 Z" />
+        <path id="offside" class="region ${hit('offside')}"
+              d="M 264 120 L 230 120 L 230 440 L 260 440 C 264 380, 264 200, 264 120 Z" />
 
-        <!-- Roof -->
-        <rect id="roof" class="${cls('roof')}" x="120" y="200" width="120" height="240" rx="20" opacity="0.4"/>
+        <!-- Roof (visible only when hit; otherwise transparent) -->
+        <rect id="roof" class="region ${hit('roof')}" x="116" y="190" width="88" height="230" rx="14" opacity="0.55" />
       </g>
-
-      <!-- Centre divider lines (door positions) -->
-      <line x1="120" y1="260" x2="240" y2="260" stroke="#D1D4DC" stroke-dasharray="3 3"/>
-      <line x1="120" y1="360" x2="240" y2="360" stroke="#D1D4DC" stroke-dasharray="3 3"/>
 
       <!-- Compass labels -->
-      <g font-family="Inter, Arial, sans-serif" font-size="11" fill="#6B7280" text-anchor="middle">
-        <text x="180" y="34">FRONT</text>
-        <text x="180" y="580">REAR</text>
-        <text x="20"  y="305" transform="rotate(-90 20 305)">NEARSIDE</text>
-        <text x="340" y="305" transform="rotate(90 340 305)">OFFSIDE</text>
+      <g font-family="Inter, Arial, sans-serif" font-size="9" fill="#6B7280" text-anchor="middle">
+        <text x="160" y="20">FRONT</text>
+        <text x="160" y="548">REAR</text>
+        <text x="20"  y="282" transform="rotate(-90 20 282)">NEARSIDE</text>
+        <text x="300" y="282" transform="rotate(90 300 282)">OFFSIDE</text>
       </g>
     </svg>
 
     <div class="text-muted small mt-2" style="text-align:center;">
-      Red zones indicate damage areas reported across all write-off records.
+      Red zones highlight damage areas reported across all write-off records.
     </div>
   `;
 }

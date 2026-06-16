@@ -83,16 +83,20 @@ export async function generateReportPdf(payload: ReportPayload): Promise<Buffer>
       );
     });
 
+    // We use CSS @page margins (preferCSSPageSize: true) so the body content
+    // is positioned correctly. Playwright still needs explicit `margin` to
+    // know where to render the header/footer templates — the values MUST
+    // match the @page rule in styles.ts.
     const pdf = await page.pdf({
       format: 'A4',
       printBackground: true,
-      preferCSSPageSize: false,
+      preferCSSPageSize: true,
       displayHeaderFooter: true,
       headerTemplate: renderHeaderHtml(payload),
       footerTemplate: renderFooterHtml(payload),
       margin: {
-        top: '22mm',
-        bottom: '18mm',
+        top: '28mm',
+        bottom: '20mm',
         left: '10mm',
         right: '10mm',
       },

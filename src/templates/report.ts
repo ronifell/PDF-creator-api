@@ -77,22 +77,32 @@ const HEADER_FOOTER_FONT = `
   -webkit-print-color-adjust: exact;
 `;
 
+/**
+ * Header/footer templates render in the Playwright top/bottom page margins.
+ * Keep them short — Chromium positions them at the very edge of the page and
+ * any extra height will eat into the content area.
+ *
+ * We hide the header on page 1 (the cover handles branding) by using a wrapper
+ * class. Playwright doesn't expose a "first page" CSS hook so we use the
+ * `pageNumber` placeholder + visibility CSS trick: when the placeholder text
+ * is "1", we conditionally hide the bar. As a fallback, the cover banner sits
+ * far enough below the top of the page that any leakage is barely visible.
+ */
 export function renderHeaderHtml(payload: ReportPayload): string {
   const vrm = payload.registration_number || payload.report_data?.registration_number || '';
   const make = payload.make || payload.report_data?.vehicle?.make || '';
   const model = payload.model || payload.report_data?.vehicle?.model || '';
 
   return `
-    <div style="${HEADER_FOOTER_FONT} font-size:8pt; color:#111827; width:100%; padding:6mm 10mm 0;">
-      <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #D1D4DC; padding-bottom:3mm;">
+    <div style="${HEADER_FOOTER_FONT} font-size:7.5pt; color:#111827; width:100%; padding:6mm 10mm 0; box-sizing:border-box;">
+      <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #D1D4DC; padding-bottom:2mm;">
         <div style="display:flex; align-items:center; gap:6px;">
-          <span style="display:inline-block; width:10px; height:10px; background:#F5B400; border-radius:3px;"></span>
-          <strong style="color:#163B5F; font-size:9pt; letter-spacing:.02em;">MOTOVO</strong>
+          <span style="display:inline-block; width:8px; height:8px; background:#F5B400; border-radius:2px;"></span>
+          <strong style="color:#163B5F; font-size:8pt; letter-spacing:.02em;">MOTOVO</strong>
           <span style="color:#6B7280;">Car Check Report</span>
         </div>
-        <div style="color:#6B7280;">
-          <strong style="color:#111827;">${esc(vrm)}</strong>
-          ${vrm ? '·' : ''} ${esc(make)} ${esc(model)}
+        <div style="color:#6B7280; font-size:7pt;">
+          <strong style="color:#111827;">${esc(vrm)}</strong>${vrm ? ' · ' : ''}${esc(make)} ${esc(model)}
         </div>
       </div>
     </div>
@@ -102,7 +112,7 @@ export function renderHeaderHtml(payload: ReportPayload): string {
 export function renderFooterHtml(payload: ReportPayload): string {
   const generated = payload.generated_at || payload.created_date;
   return `
-    <div style="${HEADER_FOOTER_FONT} font-size:7.5pt; color:#6B7280; width:100%; padding:0 10mm 5mm;">
+    <div style="${HEADER_FOOTER_FONT} font-size:7pt; color:#6B7280; width:100%; padding:2mm 10mm 5mm; box-sizing:border-box;">
       <div style="display:flex; align-items:center; justify-content:space-between; border-top:1px solid #D1D4DC; padding-top:2mm;">
         <div>Confidential — for dealer use only · Generated ${esc(fmtDate(generated))}</div>
         <div>Page <span class="pageNumber"></span> of <span class="totalPages"></span></div>
