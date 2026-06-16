@@ -67,7 +67,14 @@ export function parseDate(value: string | null | undefined): Date | null {
 export function fmtDate(value: string | null | undefined): string {
   const d = parseDate(value);
   if (!d) return DASH;
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  // Always render in UTC so a date like "28-01-2023" stays "28 Jan 2023"
+  // regardless of the host machine's timezone.
+  return d.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
 }
 
 export function fmtDateLong(value: string | null | undefined): string {
@@ -78,6 +85,7 @@ export function fmtDateLong(value: string | null | undefined): string {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
+    timeZone: 'UTC',
   });
 }
 

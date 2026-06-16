@@ -1,5 +1,5 @@
 import { MotTest, ReportPayload } from '../../types/report';
-import { esc, fmtDate, fmtMileage } from '../helpers';
+import { esc, fmtDate, fmtMileage, parseDate } from '../helpers';
 
 function advisoryTag(type: string | undefined): string {
   const t = (type || '').toUpperCase();
@@ -101,7 +101,11 @@ export function renderMileageTrend(payload: ReportPayload): string {
 
   const rows = trend
     .slice()
-    .sort((a, b) => String(a.date).localeCompare(String(b.date)))
+    .sort((a, b) => {
+      const da = parseDate(a.date)?.getTime() ?? 0;
+      const db = parseDate(b.date)?.getTime() ?? 0;
+      return db - da;
+    })
     .map(
       (p) => `
       <tr>
