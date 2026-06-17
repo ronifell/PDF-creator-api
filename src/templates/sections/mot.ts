@@ -1,6 +1,7 @@
 import { MotTest, ReportPayload } from '../../types/report';
-import { esc, fmtDate, fmtMileage, parseDate } from '../helpers';
+import { esc, fmtDate, fmtMileage, fmtNumber, parseDate } from '../helpers';
 import { renderMileageChart } from './mileageChart';
+import { detectMileageDiscrepancy } from '../insights';
 
 function advisoryTag(type: string | undefined): string {
   const t = (type || '').toUpperCase();
@@ -96,44 +97,71 @@ export function renderMotHistory(payload: ReportPayload): string {
   `;
 }
 
+/**
+ * Mileage progression: line chart + a brief plain-English summary.
+ *
+ * The full table is intentionally **only** rendered when a discrepancy is
+ * detected (mileage stepping backwards). Otherwise the chart already conveys
+ * the whole story, and the same data is shown again next to each test card
+ * in the MOT History section below.
+ */
 export function renderMileageTrend(payload: ReportPayload): string {
   const trend = payload.report_data?.mot?.mileage_trend || [];
   if (!trend.length) return '';
 
-  const rows = trend
+  // Sort chronologically for the summary stats.
+  const sorted = trend
     .slice()
-    .sort((a, b) => {
-      const da = parseDate(a.date)?.getTime() ?? 0;
-      const db = parseDate(b.date)?.getTime() ?? 0;
-      return db - da;
-    })
-    .map(
-      (p) => `
-      <tr>
-        <td>${esc(fmtDate(p.date))}</td>
-        <td>${esc(fmtMileage(p.mileage ?? null))}</td>
-      </tr>`,
-    )
-    .join('');
+    .map((p) => ({ ...p, _t: parseDate(p.date)?.getTime() ?? 0 }))
+    .sort((a, b) => a._t - b._t);
 
-  const chart = renderMileageChart(trend);
+  const first = sorted[0];
+  const last = sorted[sorted.length - 1];
+  const span = last && first
+    ? Math.max(0, (last.mileage ?? 0) - (first.mileage ?? 0))
+    : 0;
+
+  const { hasDiscrepancy, decreases } = detectMileageDiscrepancy(trend);
+
+  const summary = hasDiscrepancy
+    ? `<span class="badge danger" style="margin-right:6px;">DISCREPANCY</span>
+       Mileage steps backwards <strong>${esc(decreases)}</strong> time${decreases === 1 ? '' : 's'} —
+       inspect the recorded readings below before purchase.`
+    : `Mileage progression appears <strong>consistent</strong> from
+       <strong>${esc(fmtDate(first.date))}</strong> to
+       <strong>${esc(fmtDate(last.date))}</strong>
+       (+${esc(fmtNumber(span))} mi across ${esc(sorted.length)} reading${sorted.length === 1 ? '' : 's'}).`;
+
+  // Table is only emitted when we detected an anomaly.
+  const tableHtml = hasDiscrepancy
+    ? `
+      <div class="table-wrap mt-2">
+        <table>
+          <thead><tr><th>Date</th><th>Recorded mileage</th></tr></thead>
+          <tbody>${sorted
+            .slice()
+            .reverse()
+            .map(
+              (p) => `
+              <tr>
+                <td>${esc(fmtDate(p.date))}</td>
+                <td>${esc(fmtMileage(p.mileage ?? null))}</td>
+              </tr>`,
+            )
+            .join('')}
+          </tbody>
+        </table>
+      </div>`
+    : '';
 
   return `
     <section class="section no-break">
       <div class="section-title"><span class="icon">↗</span> Mileage Progression</div>
       <div class="card">
-        ${chart}
-        <div class="text-muted small mt-2">
-          Mileage progression appears <strong>consistent</strong>. Investigate any flat spots or
-          drops with the seller before purchase.
-        </div>
+        ${renderMileageChart(trend)}
+        <div class="text-muted small mt-2">${summary}</div>
       </div>
-      <div class="table-wrap mt-2">
-        <table>
-          <thead><tr><th>Date</th><th>Recorded mileage</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
+      ${tableHtml}
     </section>
   `;
 }

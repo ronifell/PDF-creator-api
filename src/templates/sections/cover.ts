@@ -1,6 +1,7 @@
 import { ReportPayload, ReportStatus } from '../../types/report';
 import { esc, escAttr, fmtCurrency, fmtDate, fmtMileage } from '../helpers';
 import { readAssetDataUrl } from '../assets';
+import { gatherObservations } from '../insights';
 
 type Tone = 'ok' | 'warn' | 'fail';
 
@@ -8,6 +9,17 @@ interface Finding {
   label: string;
   value: string;
   tone: Tone;
+}
+
+/** Returns the VIN if it looks like an actual VIN, otherwise null. */
+function pickVin(payload: ReportPayload): string | null {
+  const v = payload.report_data?.vehicle?.vin?.trim();
+  if (!v) return null;
+  // The upstream feed sometimes returns "Permission Required" / "N/A" /
+  // "Unavailable" instead of an actual VIN. Treat anything that doesn't look
+  // like a VIN (alnum 11-17 chars) as missing so the cover stays clean.
+  if (!/^[A-HJ-NPR-Z0-9]{11,17}$/i.test(v)) return null;
+  return v.toUpperCase();
 }
 
 function statusBannerHtml(status: ReportStatus | undefined, issues: string[]): string {
@@ -89,47 +101,7 @@ function findings(payload: ReportPayload): Finding[] {
 }
 
 function observationsHtml(payload: ReportPayload): string {
-  const r = payload.report_data;
-  const items: Array<{ tone: Tone; text: string }> = [];
-
-  items.push(
-    r?.is_stolen
-      ? { tone: 'fail', text: 'Reported as STOLEN on the Police National Computer.' }
-      : { tone: 'ok', text: 'Not recorded as stolen on the Police National Computer.' },
-  );
-
-  const financeCount = r?.finance?.records?.length ?? 0;
-  items.push(
-    financeCount > 0
-      ? { tone: 'fail', text: `${financeCount} outstanding finance record${financeCount === 1 ? '' : 's'} found.` }
-      : { tone: 'ok', text: 'No outstanding finance records found.' },
-  );
-
-  const writeoffCount = r?.writeoff?.records?.length ?? 0;
-  if (writeoffCount > 0) {
-    items.push({
-      tone: 'fail',
-      text: `${writeoffCount} write-off record${writeoffCount === 1 ? '' : 's'} found — inspect structural integrity.`,
-    });
-  }
-
-  const motDue = r?.tax?.mot_due_date || r?.mot?.mot_due_date;
-  if (motDue) {
-    items.push({ tone: 'ok', text: `MOT valid until ${fmtDate(motDue)}.` });
-  }
-
-  if (payload.has_high_keeper_turnover) {
-    items.push({
-      tone: 'warn',
-      text: 'High keeper turnover detected — review ownership reasons carefully.',
-    });
-  }
-
-  if (r?.history?.imported) items.push({ tone: 'warn', text: 'Vehicle imported into the UK.' });
-  if (r?.history?.exported) items.push({ tone: 'warn', text: 'Vehicle exported from the UK.' });
-  if (r?.history?.is_scrapped)
-    items.push({ tone: 'fail', text: 'Vehicle recorded as scrapped.' });
-
+  const items = gatherObservations(payload);
   return `
     <div class="observations">
       ${items
@@ -186,6 +158,12 @@ export function renderCover(payload: ReportPayload): string {
         <div class="plate-wrap">
           <div class="plate-label">REGISTRATION</div>
           <span class="plate">${esc(vrm)}</span>
+          ${(() => {
+            const vin = pickVin(payload);
+            return vin
+              ? `<div class="vin-row"><span class="vin-label">VIN</span><span class="vin-value mono">${esc(vin)}</span></div>`
+              : '';
+          })()}
         </div>
       </div>
 
@@ -214,7 +192,11 @@ export function renderCover(payload: ReportPayload): string {
       <div class="findings-grid">${findingCards}</div>
     </section>
 
-    <section class="section no-break">
+    <!-- Key Observations: this list can be long (MOT insights are added on top
+         of the risk story), so we deliberately omit no-break here and let it
+         flow across pages. The section title is sticky (break-after:avoid)
+         and each observation row is itself break-inside:avoid. -->
+    <section class="section">
       <div class="section-title"><span class="icon">i</span> Key Observations</div>
       ${observationsHtml(payload)}
     </section>

@@ -217,6 +217,21 @@ tbody tr:last-child td { border-bottom: none; }
 .cover .plate-label {
   font-size: 7pt; opacity: 0.75; letter-spacing: 0.12em; text-transform: uppercase;
 }
+.cover .vin-row {
+  margin-top: 6px;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+.cover .vin-row .vin-label {
+  font-size: 7pt; opacity: 0.7; letter-spacing: 0.12em; text-transform: uppercase;
+}
+.cover .vin-row .vin-value {
+  font-size: 9pt; font-weight: 700; letter-spacing: 0.04em;
+  color: #FFFFFF;
+}
 
 .cover .cover-title {
   margin-top: 12px;
@@ -306,6 +321,8 @@ tbody tr:last-child td { border-bottom: none; }
   border-radius: var(--radius);
   padding: 7px 10px;
   font-size: 9.5pt;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 .observation .dot {
   flex: 0 0 8px; height: 8px; border-radius: 999px; margin-top: 5px;
@@ -403,8 +420,38 @@ tbody tr:last-child td { border-bottom: none; }
 .tag.PRS       { background: #F2F4F8; color: var(--primary); }
 .tag.FAIL      { background: var(--destructive); color: #fff; }
 
+/* ---------- Running Costs ---------- */
+.cost-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.cost {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, #FFFFFF, #FAFBFD);
+  padding: 10px 12px;
+  break-inside: avoid;
+}
+.cost .label { font-size: 8.5pt; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.05em; }
+.cost .value { font-size: 13pt; font-weight: 800; color: var(--primary); margin-top: 2px; line-height: 1.1; }
+.cost .foot  { font-size: 8pt; color: var(--muted-fg); margin-top: 2px; }
+.cost.feature {
+  background: var(--primary); color: #fff; border-color: var(--primary);
+}
+.cost.feature .label,
+.cost.feature .foot { color: #ffffffcc; }
+.cost.feature .value { color: #fff; font-size: 14pt; }
+
 /* ---------- Write-off ---------- */
 .writeoff-cards { display: flex; flex-direction: column; gap: 8px; }
+.writeoff-list  { display: flex; flex-direction: column; gap: 12px; }
+.writeoff-record { display: flex; flex-direction: column; gap: 6px; }
+.writeoff-record .card { margin: 0; }
+.writeoff-diagram { /* the diagram block already brings its own padding/border */ }
+.writeoff-diagram-empty {
+  background: var(--secondary);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  text-align: center;
+}
 
 /* Mileage chart */
 .mileage-chart { width: 100%; height: auto; max-height: 220px; display: block; }

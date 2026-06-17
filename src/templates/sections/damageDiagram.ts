@@ -20,7 +20,7 @@
  * gentle Gaussian-blur SVG filter to soften the edges.
  */
 
-import { normaliseArea } from '../helpers';
+import { esc, normaliseArea } from '../helpers';
 import { readAssetText } from '../assets';
 
 const REGION_MATCHERS: { id: string; tests: RegExp[] }[] = [
@@ -113,9 +113,23 @@ function loadBaseSvg(): string {
   return svg;
 }
 
-export function renderDamageDiagram(damageAreas: string[]): string {
+export interface DamageDiagramOptions {
+  /** Caption text shown below the diagram. */
+  caption?: string;
+}
+
+export function renderDamageDiagram(
+  damageAreas: string[],
+  opts: DamageDiagramOptions = {},
+): string {
   const hits = regionsToHighlight(damageAreas);
   const tagged = tagRegions(loadBaseSvg(), hits);
+
+  const caption =
+    opts.caption ??
+    (damageAreas.length
+      ? `Highlighted: ${damageAreas.map((a) => a.trim()).filter(Boolean).join(', ')}.`
+      : 'No damage area data available.');
 
   return /* html */ `
     <div class="damage-diagram-wrap">
@@ -126,9 +140,7 @@ export function renderDamageDiagram(damageAreas: string[]): string {
         <span class="compass-label compass-nearside">N E A R S I D E</span>
         <span class="compass-label compass-offside">O F F S I D E</span>
       </div>
-      <div class="damage-diagram-caption text-muted small">
-        Red zones highlight damage areas reported across all write-off records.
-      </div>
+      <div class="damage-diagram-caption text-muted small">${esc(caption)}</div>
     </div>
   `;
 }

@@ -1,5 +1,5 @@
-import { ReportPayload } from '../../types/report';
-import { esc, fmtDate, normaliseArea } from '../helpers';
+import { ReportPayload, WriteoffRecord } from '../../types/report';
+import { esc, fmtDate } from '../helpers';
 import { renderDamageDiagram } from './damageDiagram';
 
 function categoryBadge(category: string | undefined): string {
@@ -16,27 +16,26 @@ function categoryBadge(category: string | undefined): string {
   return `<span class="badge ${info.cls}">${esc(info.label)}</span>`;
 }
 
-export function renderWriteoffSection(payload: ReportPayload): string {
-  const records = payload.report_data?.writeoff?.records || [];
-  if (!records.length) return '';
-
-  // Aggregate all damage areas across all records (deduplicated)
-  const allAreas = Array.from(
-    new Set(
-      records.flatMap((r) => (r.damage_areas || []).map((a) => normaliseArea(a))).filter(Boolean),
-    ),
-  );
-
-  const cards = records
-    .map(
-      (r) => `
-      <div class="card mt-2 no-break">
+/**
+ * Render a single write-off record with its OWN matching damage diagram.
+ *
+ * The whole pair (card + diagram + caption) is wrapped in
+ * `writeoff-record no-break` so the diagram never gets separated from the
+ * record it belongs to.
+ */
+function renderRecord(r: WriteoffRecord, index: number): string {
+  const areas = r.damage_areas || [];
+  return /* html */ `
+    <div class="writeoff-record no-break">
+      <div class="card">
         <div class="row-between" style="margin-bottom:6px;">
           <div class="row-gap">
             ${categoryBadge(r.category)}
             <strong>${esc(r.status || 'Insurance write-off')}</strong>
           </div>
-          <div class="text-muted small">Loss date: <strong>${esc(fmtDate(r.loss_date))}</strong></div>
+          <div class="text-muted small">
+            Record #${esc(index + 1)} · Loss date: <strong>${esc(fmtDate(r.loss_date))}</strong>
+          </div>
         </div>
         <div class="kv" style="grid-template-columns: 1fr 1fr;">
           <div class="row"><div class="k">Cause of damage</div><div class="v">${esc(r.cause_of_damage)}</div></div>
@@ -45,34 +44,43 @@ export function renderWriteoffSection(payload: ReportPayload): string {
           <div class="row"><div class="k">MIAFTR date</div><div class="v">${esc(fmtDate(r.miaftr_date))}</div></div>
           <div class="row"><div class="k">Damage areas</div>
             <div class="v">${
-              (r.damage_areas || []).length
-                ? (r.damage_areas || [])
-                    .map((a) => `<span class="badge danger">${esc(a)}</span>`)
-                    .join(' ')
+              areas.length
+                ? areas.map((a) => `<span class="badge danger">${esc(a)}</span>`).join(' ')
                 : '—'
             }</div>
           </div>
         </div>
       </div>
-    `,
-    )
-    .join('');
 
+      ${
+        areas.length
+          ? `<div class="writeoff-diagram">${renderDamageDiagram(areas)}</div>`
+          : `<div class="writeoff-diagram-empty text-muted small">No damage area specified by the insurer.</div>`
+      }
+    </div>
+  `;
+}
+
+export function renderWriteoffSection(payload: ReportPayload): string {
+  const records = payload.report_data?.writeoff?.records || [];
+  if (!records.length) return '';
+
+  // Section heading + status banner are wrapped in section-lead so the heading
+  // cannot end up alone at the bottom of a page (matches the page-break fix
+  // already in place for Keeper History).
   return `
     <section class="section">
-      <div class="section-title section-title-sticky"><span class="icon">⚠</span> Write-off Records (${esc(records.length)})</div>
-      <div class="status-banner fail" style="margin-top:0; margin-bottom:8px;">
-        <span class="dot"></span>
-        <span><strong>This vehicle is recorded as an insurance write-off.</strong>&nbsp; See details and damage diagram below.</span>
+      <div class="section-lead">
+        <div class="section-title"><span class="icon">⚠</span> Write-off Records (${esc(records.length)})</div>
+        <div class="status-banner fail" style="margin-top:0; margin-bottom:8px;">
+          <span class="dot"></span>
+          <span><strong>This vehicle is recorded as an insurance write-off.</strong>&nbsp;
+            Each record below is paired with a diagram showing its specific damage area.</span>
+        </div>
       </div>
 
-      <div class="writeoff-cards">${cards}</div>
-
-      <div class="no-break">
-        <div class="section-title section-title-sub" style="margin-top:14px;">
-          <span class="icon">◬</span> Damage Area Diagram
-        </div>
-        ${renderDamageDiagram(allAreas)}
+      <div class="writeoff-list">
+        ${records.map((r, i) => renderRecord(r, i)).join('')}
       </div>
     </section>
   `;

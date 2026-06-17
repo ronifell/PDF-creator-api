@@ -10,7 +10,7 @@ import { renderKeeperHistory } from './sections/keepers';
 import { renderWriteoffSection } from './sections/writeoff';
 import { renderValuation } from './sections/valuation';
 import { renderEquipment } from './sections/equipment';
-import { renderTaxAndFinance } from './sections/taxAndFinance';
+import { renderRunningCosts } from './sections/runningCosts';
 
 /**
  * Render the full HTML document for a vehicle report.
@@ -37,25 +37,50 @@ export function renderReportHtml(payload: ReportPayload): string {
   </head>
   <body>
     <main class="page">
+      <!-- 1. Hero / cover -->
+      <!-- 2. Key Findings    -->
+      <!-- 3. Key Observations -->
       ${renderCover(payload)}
+
+      <!-- 4. Risk Check Summary -->
       ${renderRiskChecks(payload)}
+
+      <!-- 5. Vehicle Overview -->
       ${renderVehicleOverview(payload)}
+
+      <!-- 6. Running Costs -->
+      ${renderRunningCosts(payload)}
+
+      <!-- 7. Write-off Records + per-record Damage Area diagrams -->
       ${renderWriteoffSection(payload)}
-      ${renderMotHistory(payload)}
+
+      <!-- 8. Mileage Progression (graph + summary, table only on discrepancy) -->
       ${renderMileageTrend(payload)}
+
+      <!-- 9. MOT History -->
+      ${renderMotHistory(payload)}
+
+      <!-- 10. Keeper History -->
       ${renderKeeperHistory(payload)}
-      ${renderTaxAndFinance(payload)}
+
+      <!-- 11. Valuation -->
       ${renderValuation(payload)}
+
+      <!-- 12. Equipment List -->
       ${renderEquipment(payload)}
 
+      <!-- 13. Disclaimer / data source notes -->
       <section class="section no-break" style="margin-top:18px;">
         <div class="card" style="background: var(--secondary); border-color: var(--border);">
-          <h4 style="color: var(--primary);">Disclaimer</h4>
+          <h4 style="color: var(--primary);">Disclaimer &amp; Data Sources</h4>
           <p class="small text-muted" style="margin-top:4px;">
-            This report is compiled from third-party data feeds (DVLA, MIAFTR, finance houses and trade
-            valuation books) and is provided for informational purposes only. Every reasonable effort is
-            made to ensure accuracy, however Motovo accepts no liability for any decision made on the
-            basis of this report. Always verify VIN, mileage and condition in person before purchase.
+            This report is compiled from third-party data feeds (DVLA, DVSA, MIAFTR insurance loss
+            register, finance houses and trade valuation books) and is provided for informational
+            purposes only. Mileage figures originate from DVSA MOT records. Valuations and running
+            cost estimates are indicative and subject to market conditions. Every reasonable effort
+            is made to ensure accuracy, however Motovo accepts no liability for any decision made
+            on the basis of this report. Always verify VIN, mileage and condition in person before
+            purchase.
           </p>
         </div>
       </section>
