@@ -1,14 +1,15 @@
 import { MileagePoint } from '../../types/report';
 import { esc, fmtNumber, parseDate } from '../helpers';
 
-interface Point { x: number; y: number; date: Date; mileage: number; }
+interface ChartDatum { date: Date; mileage: number; }
+interface ChartPoint extends ChartDatum { x: number; y: number; }
 
 /**
  * Render an SVG line chart of mileage over time. Designed to fit alongside
  * the valuation/risk cards. Defensive against missing/null mileages.
  */
 export function renderMileageChart(trend: MileagePoint[] | undefined): string {
-  const points: Point[] = (trend || [])
+  const points: ChartDatum[] = (trend || [])
     .map((p) => ({ date: parseDate(p.date)!, mileage: Number(p.mileage) }))
     .filter((p) => p.date && Number.isFinite(p.mileage));
 
@@ -44,7 +45,7 @@ export function renderMileageChart(trend: MileagePoint[] | undefined): string {
   const xMap = (t: number) => padL + ((t - xMin) / xSpan) * plotW;
   const yMap = (m: number) => padT + (1 - (m - yMin) / (yMax - yMin)) * plotH;
 
-  const mapped: Point[] = points.map((p) => ({
+  const mapped: ChartPoint[] = points.map((p) => ({
     ...p,
     x: xMap(p.date.getTime()),
     y: yMap(p.mileage),

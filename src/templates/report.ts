@@ -1,6 +1,7 @@
 import { ReportPayload } from '../types/report';
 import { reportStyles } from './styles';
 import { esc, fmtDate } from './helpers';
+import { readAssetDataUrl } from './assets';
 import { renderCover } from './sections/cover';
 import { renderVehicleOverview } from './sections/vehicle';
 import { renderRiskChecks } from './sections/risks';
@@ -92,12 +93,13 @@ export function renderHeaderHtml(payload: ReportPayload): string {
   const vrm = payload.registration_number || payload.report_data?.registration_number || '';
   const make = payload.make || payload.report_data?.vehicle?.make || '';
   const model = payload.model || payload.report_data?.vehicle?.model || '';
+  const logoSrc = readAssetDataUrl('logo.png', 'image/png');
 
   return `
     <div style="${HEADER_FOOTER_FONT} font-size:7.5pt; color:#111827; width:100%; padding:6mm 10mm 0; box-sizing:border-box;">
       <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #D1D4DC; padding-bottom:2mm;">
         <div style="display:flex; align-items:center; gap:6px;">
-          <span style="display:inline-block; width:8px; height:8px; background:#F5B400; border-radius:2px;"></span>
+          <img src="${logoSrc}" alt="" style="width:11px; height:11px; display:block;" />
           <strong style="color:#163B5F; font-size:8pt; letter-spacing:.02em;">MOTOVO</strong>
           <span style="color:#6B7280;">Car Check Report</span>
         </div>

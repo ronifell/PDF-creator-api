@@ -60,17 +60,19 @@ export function renderWriteoffSection(payload: ReportPayload): string {
 
   return `
     <section class="section">
-      <div class="section-title"><span class="icon">⚠</span> Write-off Records (${esc(records.length)})</div>
+      <div class="section-title section-title-sticky"><span class="icon">⚠</span> Write-off Records (${esc(records.length)})</div>
       <div class="status-banner fail" style="margin-top:0; margin-bottom:8px;">
         <span class="dot"></span>
         <span><strong>This vehicle is recorded as an insurance write-off.</strong>&nbsp; See details and damage diagram below.</span>
       </div>
 
-      <div class="writeoff-row">
-        <div>${cards}</div>
-        <div class="damage-diagram-wrap no-break">
-          ${renderDamageDiagram(allAreas)}
+      <div class="writeoff-cards">${cards}</div>
+
+      <div class="no-break">
+        <div class="section-title section-title-sub" style="margin-top:14px;">
+          <span class="icon">◬</span> Damage Area Diagram
         </div>
+        ${renderDamageDiagram(allAreas)}
       </div>
     </section>
   `;

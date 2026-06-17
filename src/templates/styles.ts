@@ -195,16 +195,21 @@ tbody tr:last-child td { border-bottom: none; }
   gap: 12px;
 }
 .cover .brand {
-  display: inline-flex; align-items: center; gap: 8px;
+  display: inline-flex; align-items: center; gap: 10px;
 }
-.cover .brand .logo-dot {
-  width: 18px; height: 18px; border-radius: 5px; background: var(--accent);
+.cover .brand .brand-logo {
+  width: 28px; height: 28px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25));
+}
+.cover .brand .brand-text {
+  display: flex; flex-direction: column; line-height: 1;
 }
 .cover .brand .brand-name {
   font-weight: 800; font-size: 14pt; letter-spacing: -0.02em;
 }
 .cover .brand .brand-sub {
-  opacity: 0.85; font-size: 9pt; padding-left: 4px;
+  opacity: 0.85; font-size: 8.5pt; margin-top: 2px;
 }
 .cover .plate-wrap {
   display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
@@ -399,29 +404,105 @@ tbody tr:last-child td { border-bottom: none; }
 .tag.FAIL      { background: var(--destructive); color: #fff; }
 
 /* ---------- Write-off ---------- */
-.writeoff-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
+.writeoff-cards { display: flex; flex-direction: column; gap: 8px; }
+
 /* Mileage chart */
 .mileage-chart { width: 100%; height: auto; max-height: 220px; display: block; }
 
+/* Damage diagram (landscape SVG from assets/damage-diagram.svg).
+   The canvas wrapper hosts compass labels positioned around the silhouette. */
 .damage-diagram-wrap {
-  display: flex; align-items: center; justify-content: center;
   background: var(--secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 8px;
-  min-height: 180px;
+  padding: 14px 18px 10px;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
-.damage-diagram { width: 100%; height: auto; max-height: 260px; }
-/* Damage region states inside the SVG.
-   Non-hit regions are transparent so the car silhouette shows through.
-   Hit regions get a flat red wash with a darker outline. */
-.damage-diagram .region { fill: transparent; stroke: transparent; }
-.damage-diagram .region.hit { fill: #C72929; stroke: #7F1717; stroke-width: 1; }
-.damage-diagram .region.hit-secondary { fill: #F5B400; stroke: #9C7300; stroke-width: 1; }
+.damage-diagram-canvas {
+  position: relative;
+  width: 100%;
+  /* SVG viewBox is ~2:1 (211 x 105). Cap height so it never dominates a page. */
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 4px 50px; /* room for compass labels left/right */
+}
+.damage-diagram {
+  width: 100%; height: auto; display: block;
+  max-height: 240px;
+}
+/* Base car silhouette uses the artwork's original black fill so the outline
+   and interior detail look exactly as drawn. (To recolour to brand primary,
+   uncomment the rule below.)                                                  */
+/* .damage-diagram #car-body { fill: #163B5F !important; } */
+
+/* Damage regions:
+   - Non-hit  → fully transparent so silhouette shows through cleanly.
+   - Hit      → soft red wash with a Gaussian-blur feather + multiply blend, so
+                multiple overlapping hits darken naturally and the edges look
+                airbrushed rather than cut out (matches the "feather + blend"
+                look the client described).                                    */
+.damage-diagram .damage-region { fill: transparent !important; }
+.damage-diagram .damage-region.hit {
+  fill: #E53935 !important;
+  fill-opacity: 0.7 !important;
+  mix-blend-mode: multiply;
+  filter: url(#damage-feather);
+}
+
+/* Compass labels — letter-spaced to mirror the online Motovo view */
+.damage-diagram-canvas .compass-label {
+  position: absolute;
+  font-size: 7pt;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--muted-fg);
+  text-transform: uppercase;
+}
+.damage-diagram-canvas .compass-front {
+  right: 4px; top: 50%; transform: translateY(-50%) rotate(90deg);
+  transform-origin: center;
+}
+.damage-diagram-canvas .compass-rear {
+  left: 4px; top: 50%; transform: translateY(-50%) rotate(-90deg);
+  transform-origin: center;
+}
+.damage-diagram-canvas .compass-nearside {
+  top: -2px; left: 50%; transform: translateX(-50%);
+}
+.damage-diagram-canvas .compass-offside {
+  bottom: -2px; left: 50%; transform: translateX(-50%);
+}
+.damage-diagram-caption { text-align: center; margin-top: 6px; }
+
+/* "Lead" group: section title + banner that must stay together.
+   Combined with break-after:avoid on .section-title this guarantees the
+   heading is never the last thing on a page. */
+.section-lead {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+/* Tables: keep the header row with at least the first body row. */
+thead { break-inside: avoid; page-break-inside: avoid; }
+thead tr { break-after: avoid; page-break-after: avoid; }
+tbody tr { break-inside: avoid; page-break-inside: avoid; }
+
+/* Section sub-title (used inside a section for the damage diagram heading) */
+.section-title-sub {
+  font-size: 10.5pt;
+  border-bottom-width: 1px;
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+}
+/* Keep section titles attached to whatever follows so we never orphan a heading
+   like "Keeper History (10)" at the bottom of a page (issue noticed in the
+   draft PDF). break-after: avoid asks the layout engine to never insert a
+   break immediately after this element. */
+.section-title, .section-title-sticky {
+  break-after: avoid-page;
+  page-break-after: avoid;
+}
 
 /* ---------- Equipment ---------- */
 .equip-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }

@@ -1,5 +1,6 @@
 import { ReportPayload, ReportStatus } from '../../types/report';
 import { esc, escAttr, fmtCurrency, fmtDate, fmtMileage } from '../helpers';
+import { readAssetDataUrl } from '../assets';
 
 type Tone = 'ok' | 'warn' | 'fail';
 
@@ -170,13 +171,17 @@ export function renderCover(payload: ReportPayload): string {
     )
     .join('');
 
+  const logoSrc = readAssetDataUrl('logo.png', 'image/png');
+
   return `
     <section class="cover">
       <div class="cover-bar">
         <div class="brand">
-          <span class="logo-dot"></span>
-          <span class="brand-name">MOTOVO</span>
-          <span class="brand-sub">Dealer Vehicle History Report</span>
+          <img class="brand-logo" src="${escAttr(logoSrc)}" alt="Motovo logo" />
+          <div class="brand-text">
+            <div class="brand-name">MOTOVO</div>
+            <div class="brand-sub">Dealer Vehicle History Report</div>
+          </div>
         </div>
         <div class="plate-wrap">
           <div class="plate-label">REGISTRATION</div>

@@ -22,15 +22,21 @@ export function renderKeeperHistory(payload: ReportPayload): string {
 
   return `
     <section class="section">
-      <div class="section-title"><span class="icon">◇</span> Keeper History (${esc(keepers.length)})</div>
-      ${
-        payload.has_high_keeper_turnover
-          ? `<div class="status-banner warn" style="margin-top:0; margin-bottom:8px;">
-              <span class="dot"></span>
-              <span><strong>High keeper turnover detected.</strong>&nbsp; This vehicle has changed hands frequently — investigate ownership reasons.</span>
-            </div>`
-          : ''
-      }
+      <!-- Heading + warning banner + table header are wrapped in a "lead" block
+           that must not be broken across pages. This guarantees that if the
+           Keeper History title is shown, the banner and at least the table
+           header travel with it (no orphaned heading at the bottom of a page). -->
+      <div class="section-lead">
+        <div class="section-title"><span class="icon">◇</span> Keeper History (${esc(keepers.length)})</div>
+        ${
+          payload.has_high_keeper_turnover
+            ? `<div class="status-banner warn" style="margin-top:0; margin-bottom:8px;">
+                <span class="dot"></span>
+                <span><strong>High keeper turnover detected.</strong>&nbsp; This vehicle has changed hands frequently — investigate ownership reasons.</span>
+              </div>`
+            : ''
+        }
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
