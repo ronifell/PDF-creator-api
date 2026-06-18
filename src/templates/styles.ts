@@ -591,7 +591,10 @@ tbody tr { break-inside: avoid; page-break-inside: avoid; }
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px 8px;
-  align-items: start;
+  /* stretch (default) so the two boxes in each row share the same vertical
+     height — the shorter card grows to match its taller neighbour, giving the
+     section the clean, symmetrical look from the online Motovo view. */
+  align-items: stretch;
 }
 .equip-cat {
   border: 1px solid var(--border);
