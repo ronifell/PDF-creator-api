@@ -66,24 +66,28 @@ export function renderReportHtml(payload: ReportPayload): string {
       <!-- 11. Valuation -->
       ${renderValuation(payload)}
 
-      <!-- 12. Equipment List -->
-      ${renderEquipment(payload)}
-
-      <!-- 13. Disclaimer / data source notes -->
-      <section class="section no-break" style="margin-top:18px;">
-        <div class="card" style="background: var(--secondary); border-color: var(--border);">
-          <h4 style="color: var(--primary);">Disclaimer &amp; Data Sources</h4>
-          <p class="small text-muted" style="margin-top:4px;">
-            This report is compiled from third-party data feeds (DVLA, DVSA, MIAFTR insurance loss
-            register, finance houses and trade valuation books) and is provided for informational
-            purposes only. Mileage figures originate from DVSA MOT records. Valuations and running
-            cost estimates are indicative and subject to market conditions. Every reasonable effort
-            is made to ensure accuracy, however Motovo accepts no liability for any decision made
-            on the basis of this report. Always verify VIN, mileage and condition in person before
-            purchase.
-          </p>
-        </div>
-      </section>
+          <!-- 12. Equipment List + 13. Disclaimer (rendered together inside
+               the same <section>) so they share one flow context. The
+               disclaimer card has break-inside:avoid so its text never
+               splits across pages, even if that means it lands on its own
+               final page. -->
+          ${renderEquipment(
+            payload,
+            /* html */ `
+              <div class="disclaimer-strip card" style="margin-top:8px; background: var(--secondary); border-color: var(--border); padding:8px 11px;">
+                <h4 style="color: var(--primary); font-size:9.5pt;">Disclaimer &amp; Data Sources</h4>
+                <p class="small text-muted" style="margin-top:3px; font-size:8.25pt; line-height:1.35;">
+                  This report is compiled from third-party data feeds (DVLA, DVSA, MIAFTR insurance loss
+                  register, finance houses and trade valuation books) and is provided for informational
+                  purposes only. Mileage figures originate from DVSA MOT records. Valuations and running
+                  cost estimates are indicative and subject to market conditions. Every reasonable effort
+                  is made to ensure accuracy, however Motovo accepts no liability for any decision made
+                  on the basis of this report. Always verify VIN, mileage and condition in person before
+                  purchase.
+                </p>
+              </div>
+            `,
+          )}
     </main>
   </body>
   </html>`;
@@ -121,8 +125,8 @@ export function renderHeaderHtml(payload: ReportPayload): string {
   const logoSrc = readAssetDataUrl('logo.png', 'image/png');
 
   return `
-    <div style="${HEADER_FOOTER_FONT} font-size:7.5pt; color:#111827; width:100%; padding:6mm 10mm 0; box-sizing:border-box;">
-      <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #D1D4DC; padding-bottom:2mm;">
+    <div style="${HEADER_FOOTER_FONT} font-size:7.5pt; color:#111827; width:100%; padding:4mm 10mm 0; box-sizing:border-box;">
+      <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #D1D4DC; padding-bottom:1.5mm;">
         <div style="display:flex; align-items:center; gap:6px;">
           <img src="${logoSrc}" alt="" style="width:11px; height:11px; display:block;" />
           <strong style="color:#163B5F; font-size:8pt; letter-spacing:.02em;">MOTOVO</strong>
@@ -139,8 +143,8 @@ export function renderHeaderHtml(payload: ReportPayload): string {
 export function renderFooterHtml(payload: ReportPayload): string {
   const generated = payload.generated_at || payload.created_date;
   return `
-    <div style="${HEADER_FOOTER_FONT} font-size:7pt; color:#6B7280; width:100%; padding:2mm 10mm 5mm; box-sizing:border-box;">
-      <div style="display:flex; align-items:center; justify-content:space-between; border-top:1px solid #D1D4DC; padding-top:2mm;">
+    <div style="${HEADER_FOOTER_FONT} font-size:7pt; color:#6B7280; width:100%; padding:1.5mm 10mm 3mm; box-sizing:border-box;">
+      <div style="display:flex; align-items:center; justify-content:space-between; border-top:1px solid #D1D4DC; padding-top:1.5mm;">
         <div>Confidential — for dealer use only · Generated ${esc(fmtDate(generated))}</div>
         <div>Page <span class="pageNumber"></span> of <span class="totalPages"></span></div>
       </div>

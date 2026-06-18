@@ -23,11 +23,11 @@ function renderCategory(category: string, items: SpecItem[]): string {
   `;
 }
 
-export function renderEquipment(payload: ReportPayload): string {
+export function renderEquipment(payload: ReportPayload, trailer = ''): string {
   const standard = payload.report_data?.specification?.standard || [];
   const optional = payload.report_data?.specification?.optional || [];
 
-  if (!standard.length && !optional.length) return '';
+  if (!standard.length && !optional.length) return trailer;
 
   const grouped = groupBy(standard, (s) => s.category || 'Other');
   const categories = Object.keys(grouped).sort();
@@ -49,10 +49,16 @@ export function renderEquipment(payload: ReportPayload): string {
       </div>`
     : '';
 
+  // Render the equipment grid and any trailing content (e.g. the disclaimer
+  // card) inside a single <section>. Keeping them as siblings of the same
+  // section block gives Chromium a unified flow context, which lets the
+  // disclaimer slide into the strip below the grid on the same page instead
+  // of being pushed onto its own page.
   return `
     <section class="section">
       <div class="section-title"><span class="icon">⚙</span> Standard Equipment (${esc(standard.length)})</div>
       <div class="equip-grid">${cards}${optionalCard}</div>
+      ${trailer}
     </section>
   `;
 }

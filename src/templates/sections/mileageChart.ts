@@ -19,9 +19,12 @@ export function renderMileageChart(trend: MileagePoint[] | undefined): string {
 
   points.sort((a, b) => a.date.getTime() - b.date.getTime());
 
+  // Tuned to a 720x160 viewBox — wide and modestly tall so the data points
+  // remain readable but the rendered SVG stays compact enough not to
+  // dominate a page. Aspect ratio is preserveAspectRatio="xMidYMid meet".
   const W = 720;     // viewBox width
-  const H = 220;     // viewBox height
-  const padL = 56, padR = 18, padT = 18, padB = 36;
+  const H = 160;     // viewBox height
+  const padL = 56, padR = 18, padT = 14, padB = 26;
   const plotW = W - padL - padR;
   const plotH = H - padT - padB;
 

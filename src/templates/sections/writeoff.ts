@@ -19,15 +19,16 @@ function categoryBadge(category: string | undefined): string {
 /**
  * Render a single write-off record with its OWN matching damage diagram.
  *
- * The whole pair (card + diagram + caption) is wrapped in
- * `writeoff-record no-break` so the diagram never gets separated from the
- * record it belongs to.
+ * The details card sits on top with the damage diagram immediately below it
+ * at full width, so the diagram is large enough to read at a glance. The
+ * whole pair is wrapped in `writeoff-record no-break` so the diagram never
+ * gets separated from the record it belongs to.
  */
 function renderRecord(r: WriteoffRecord, index: number): string {
   const areas = r.damage_areas || [];
   return /* html */ `
     <div class="writeoff-record no-break">
-      <div class="card">
+      <div class="card writeoff-card">
         <div class="row-between" style="margin-bottom:6px;">
           <div class="row-gap">
             ${categoryBadge(r.category)}

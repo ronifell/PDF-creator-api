@@ -154,8 +154,12 @@ export function renderMileageTrend(payload: ReportPayload): string {
       </div>`
     : '';
 
+  // Chart card stays atomic (break-inside:avoid via .card) so the SVG and
+  // its caption are never separated. With the chart's flat aspect ratio
+  // (800x130) the whole unit is small enough that, when space allows,
+  // Chromium can pull it onto the same page as the write-off records.
   return `
-    <section class="section no-break">
+    <section class="section">
       <div class="section-title"><span class="icon">↗</span> Mileage Progression</div>
       <div class="card">
         ${renderMileageChart(trend)}

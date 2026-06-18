@@ -47,8 +47,11 @@ html, body {
  * the header/footer templates render INSIDE the body content area. The header
  * template is rendered by Chromium within the @page top margin; body content
  * starts immediately after.
- */
-@page { size: A4; margin: 28mm 10mm 20mm 10mm; }
+ *
+ * Margins tuned to maximise content area while leaving enough room for the
+ * running header (~9mm tall) and footer (~7mm tall). Reduced from 28/20 to
+ * 20/14 to remove excessive whitespace at the bottom of pages. */
+@page { size: A4; margin: 20mm 10mm 14mm 10mm; }
 
 .page {
   /* No extra padding here — @page margin handles spacing from the page edge. */
@@ -65,7 +68,7 @@ small, .small { font-size: 8.5pt; color: var(--muted-fg); }
 .mono { font-family: 'JetBrains Mono', 'Menlo', 'Consolas', monospace; }
 
 /* ---------- Section header ---------- */
-.section { margin-top: 14px; }
+.section { margin-top: 10px; }
 .section-title {
   display: flex;
   align-items: center;
@@ -73,9 +76,9 @@ small, .small { font-size: 8.5pt; color: var(--muted-fg); }
   font-size: 12pt;
   color: var(--primary);
   font-weight: 700;
-  padding-bottom: 6px;
+  padding-bottom: 5px;
   border-bottom: 2px solid var(--accent);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 .section-title .icon {
   display: inline-flex;
@@ -93,10 +96,10 @@ small, .small { font-size: 8.5pt; color: var(--muted-fg); }
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 12px 14px;
+  padding: 9px 12px;
   break-inside: avoid;
 }
-.card + .card { margin-top: 8px; }
+.card + .card { margin-top: 6px; }
 .grid { display: grid; gap: 8px; }
 .grid-2 { grid-template-columns: repeat(2, 1fr); }
 .grid-3 { grid-template-columns: repeat(3, 1fr); }
@@ -184,7 +187,7 @@ tbody tr:last-child td { border-bottom: none; }
 /* ---------- Cover ---------- */
 .cover {
   position: relative;
-  padding: 14px 16px 14px;
+  padding: 12px 14px;
   border-radius: var(--radius-lg);
   background: linear-gradient(135deg, #163B5F 0%, #1F4F7E 65%, #2C5C8C 100%);
   color: #FFFFFF;
@@ -252,7 +255,7 @@ tbody tr:last-child td { border-bottom: none; }
 .vehicle-image-block {
   position: relative;
   width: 100%;
-  height: 170px;
+  height: 140px;
   background: var(--secondary);
   border-radius: var(--radius);
   border: 1px solid var(--border);
@@ -337,9 +340,9 @@ tbody tr:last-child td { border-bottom: none; }
 /* ---------- Status banner ---------- */
 .status-banner {
   display: flex; align-items: center; gap: 10px;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-radius: var(--radius);
-  margin-top: 12px;
+  margin-top: 8px;
   font-size: 10pt;
 }
 .status-banner .dot { width: 10px; height: 10px; border-radius: 999px; }
@@ -373,33 +376,40 @@ tbody tr:last-child td { border-bottom: none; }
 .risk .value { font-size: 10.5pt; font-weight: 600; color: var(--fg); }
 
 /* ---------- Valuation tile grid ---------- */
-.val-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.val-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .val {
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 10px 12px;
+  padding: 8px 11px;
   background: linear-gradient(180deg, #FFFFFF, #FAFBFD);
 }
-.val .label { font-size: 8.5pt; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.05em; }
-.val .value { font-size: 14pt; font-weight: 800; color: var(--primary); margin-top: 2px; }
+.val .label { font-size: 8pt; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.05em; }
+.val .value { font-size: 13pt; font-weight: 800; color: var(--primary); margin-top: 1px; }
 .val.feature { background: var(--primary); color: #fff; border-color: var(--primary); }
 .val.feature .label { color: #ffffffcc; }
-.val.feature .value { color: #fff; font-size: 16pt; }
+.val.feature .value { color: #fff; font-size: 15pt; }
 
-/* ---------- MOT items ---------- */
-.mot-card { break-inside: avoid; }
+/* ---------- MOT items ----------
+   Each MOT test is a card. We intentionally allow them to break across pages
+   (break-inside: auto) because a test with many advisories would otherwise
+   push the whole card onto the next page and leave half a page blank above.
+   The card head row stays glued to at least the first advisory via
+   break-after: avoid on .mot-head. */
+.mot-card { break-inside: auto; page-break-inside: auto; }
 .mot-head {
   display: flex; align-items: center; justify-content: space-between;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
+  break-after: avoid; page-break-after: avoid;
 }
 .mot-head .left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.advisory-list { margin: 6px 0 0; padding: 0; list-style: none; }
+.advisory-list { margin: 4px 0 0; padding: 0; list-style: none; }
 .advisory-list li {
   display: flex; gap: 8px; align-items: flex-start;
-  padding: 4px 0;
+  padding: 3px 0;
   border-top: 1px dashed var(--border);
   font-size: 9pt;
+  break-inside: avoid; page-break-inside: avoid;
 }
 .advisory-list li:first-child { border-top: none; }
 .advisory-list .tag {
@@ -421,12 +431,12 @@ tbody tr:last-child td { border-bottom: none; }
 .tag.FAIL      { background: var(--destructive); color: #fff; }
 
 /* ---------- Running Costs ---------- */
-.cost-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.cost-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .cost {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: linear-gradient(180deg, #FFFFFF, #FAFBFD);
-  padding: 10px 12px;
+  padding: 8px 10px;
   break-inside: avoid;
 }
 .cost .label { font-size: 8.5pt; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.05em; }
@@ -439,12 +449,21 @@ tbody tr:last-child td { border-bottom: none; }
 .cost.feature .foot { color: #ffffffcc; }
 .cost.feature .value { color: #fff; font-size: 14pt; }
 
-/* ---------- Write-off ---------- */
+/* ---------- Write-off ----------
+   Each record is a details card stacked directly above its own full-width
+   damage diagram. The whole pair is wrapped in writeoff-record no-break so
+   the diagram is never separated from the card it belongs to. */
 .writeoff-cards { display: flex; flex-direction: column; gap: 8px; }
-.writeoff-list  { display: flex; flex-direction: column; gap: 12px; }
-.writeoff-record { display: flex; flex-direction: column; gap: 6px; }
-.writeoff-record .card { margin: 0; }
-.writeoff-diagram { /* the diagram block already brings its own padding/border */ }
+.writeoff-list  { display: block; }
+.writeoff-list > .writeoff-record + .writeoff-record { margin-top: 12px; }
+.writeoff-record {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.writeoff-record .card,
+.writeoff-record .writeoff-diagram,
+.writeoff-record .writeoff-diagram-empty { margin: 0; }
 .writeoff-diagram-empty {
   background: var(--secondary);
   border: 1px dashed var(--border);
@@ -453,8 +472,15 @@ tbody tr:last-child td { border-bottom: none; }
   text-align: center;
 }
 
-/* Mileage chart */
-.mileage-chart { width: 100%; height: auto; max-height: 220px; display: block; }
+/* Mileage chart — flat aspect ratio set in the SVG viewBox so the rendered
+   height fits comfortably below the write-off records on the same page. The
+   chart, its caption, and the wrapping card all stay together as one
+   atomic unit (default .card rule) so we never split between the SVG and
+   the caption below it. */
+.mileage-chart {
+  width: 100%; height: auto; display: block;
+  break-inside: avoid; page-break-inside: avoid;
+}
 
 /* Damage diagram (landscape SVG from assets/damage-diagram.svg).
    The canvas wrapper hosts compass labels positioned around the silhouette. */
@@ -462,21 +488,23 @@ tbody tr:last-child td { border-bottom: none; }
   background: var(--secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px 18px 10px;
+  padding: 10px 14px 8px;
   break-inside: avoid;
   page-break-inside: avoid;
 }
 .damage-diagram-canvas {
   position: relative;
   width: 100%;
-  /* SVG viewBox is ~2:1 (211 x 105). Cap height so it never dominates a page. */
-  max-width: 520px;
+  /* SVG fills the full horizontal width of the card. Small left/right inset
+     reserves just enough room for the rotated FRONT / REAR compass labels
+     (~14px each) without shrinking the car silhouette. The viewBox is ~2:1
+     (211 x 105) and aspect ratio is preserved by the SVG itself. */
+  max-width: 100%;
   margin: 0 auto;
-  padding: 4px 50px; /* room for compass labels left/right */
+  padding: 2px 16px;
 }
 .damage-diagram {
   width: 100%; height: auto; display: block;
-  max-height: 240px;
 }
 /* Base car silhouette uses the artwork's original black fill so the outline
    and interior detail look exactly as drawn. (To recolour to brand primary,
@@ -507,11 +535,11 @@ tbody tr:last-child td { border-bottom: none; }
   text-transform: uppercase;
 }
 .damage-diagram-canvas .compass-front {
-  right: 4px; top: 50%; transform: translateY(-50%) rotate(90deg);
+  right: 0; top: 50%; transform: translateY(-50%) rotate(90deg);
   transform-origin: center;
 }
 .damage-diagram-canvas .compass-rear {
-  left: 4px; top: 50%; transform: translateY(-50%) rotate(-90deg);
+  left: 0; top: 50%; transform: translateY(-50%) rotate(-90deg);
   transform-origin: center;
 }
 .damage-diagram-canvas .compass-nearside {
@@ -520,7 +548,7 @@ tbody tr:last-child td { border-bottom: none; }
 .damage-diagram-canvas .compass-offside {
   bottom: -2px; left: 50%; transform: translateX(-50%);
 }
-.damage-diagram-caption { text-align: center; margin-top: 6px; }
+.damage-diagram-caption { text-align: center; margin-top: 4px; }
 
 /* "Lead" group: section title + banner that must stay together.
    Combined with break-after:avoid on .section-title this guarantees the
@@ -552,32 +580,46 @@ tbody tr { break-inside: avoid; page-break-inside: avoid; }
 }
 
 /* ---------- Equipment ---------- */
-.equip-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+/* Multi-column layout (rather than grid) so equipment cards flow naturally
+   across page boundaries — when one card spills, the next column / page picks
+   up where it left off instead of leaving a chunk of whitespace below. */
+/* Use a CSS Grid 2-col layout (rather than multi-column) so that the grid
+   only takes as much vertical space as its content needs in print mode —
+   multi-column containers tend to reserve the full remaining page height,
+   which would push the disclaimer onto its own page. */
+.equip-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 8px;
+  align-items: start;
+}
 .equip-cat {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--card);
-  padding: 10px 12px;
+  padding: 6px 9px;
   break-inside: avoid;
+  page-break-inside: avoid;
 }
 .equip-cat h4 {
-  font-size: 9.5pt;
+  font-size: 8.75pt;
   color: var(--primary);
-  margin-bottom: 6px;
+  margin-bottom: 3px;
   display: flex; align-items: center; gap: 6px;
 }
 .equip-cat ul {
   margin: 0; padding: 0; list-style: none;
-  display: flex; flex-direction: column; gap: 3px;
+  display: flex; flex-direction: column; gap: 0;
 }
 .equip-cat li {
-  font-size: 9pt;
-  display: flex; gap: 6px; align-items: baseline;
+  font-size: 8pt;
+  display: flex; gap: 5px; align-items: baseline;
+  line-height: 1.25;
 }
 .equip-cat li::before {
   content: '';
-  flex: 0 0 6px;
-  height: 6px;
+  flex: 0 0 4px;
+  height: 4px;
   border-radius: 999px;
   background: var(--accent);
   transform: translateY(1px);

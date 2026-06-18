@@ -99,9 +99,12 @@ export async function generateReportPdf(payload: ReportPayload): Promise<Buffer>
       displayHeaderFooter: true,
       headerTemplate: renderHeaderHtml(payload),
       footerTemplate: renderFooterHtml(payload),
+      // Margins MUST stay in lockstep with the @page rule in styles.ts —
+      // they reserve the strip where Chromium renders the header/footer
+      // templates. See styles.ts for the geometry.
       margin: {
-        top: '28mm',
-        bottom: '20mm',
+        top: '20mm',
+        bottom: '14mm',
         left: '10mm',
         right: '10mm',
       },
