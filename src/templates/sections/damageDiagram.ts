@@ -99,9 +99,15 @@ function loadBaseSvg(): string {
   // Inject the feather filter and the car-outline class hook ONCE.
   // The filter is defined inside <defs> so we can reference it from CSS via
   // `filter: url(#damage-feather)`.
+  //
+  // preserveAspectRatio="xMidYMid slice" tells the SVG to SCALE TO FILL the
+  // container (cropping excess) rather than letterboxing. Combined with the
+  // 5:2 canvas aspect-ratio in CSS, this crops the empty top/bottom of the
+  // viewBox so the car silhouette renders at full width without making each
+  // diagram unnecessarily tall.
   svg = svg.replace(
     /<svg([^>]*)>/,
-    `<svg$1 class="damage-diagram" preserveAspectRatio="xMidYMid meet">
+    `<svg$1 class="damage-diagram" preserveAspectRatio="xMidYMid slice">
        <defs>
          <filter id="damage-feather" x="-10%" y="-10%" width="120%" height="120%">
            <feGaussianBlur stdDeviation="0.8" />

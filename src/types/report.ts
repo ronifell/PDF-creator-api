@@ -169,13 +169,24 @@ export interface SpecificationInfo {
   optional?: SpecItem[];
 }
 
+/**
+ * Structured VED rate from VDG (forward-compat). When the upstream feed
+ * supplies a 12-month rate object we honour it directly; otherwise we fall
+ * back to the V149 calculator in runningCosts.ts.
+ */
+export interface VedRateObject {
+  standard_twelve_months?: number | null;
+  premium_twelve_months?: number | null;
+  is_premium_vehicle?: boolean;
+}
+
 export interface TaxInfo {
   is_valid?: boolean;
   tax_due_date?: string | null;
   mot_status?: string;
   mot_due_date?: string | null;
   co2?: number | null;
-  ved_rate?: number | string | null;
+  ved_rate?: number | string | VedRateObject | null;
   ved_12m?: number | null;
   ved_6m?: number | null;
 }

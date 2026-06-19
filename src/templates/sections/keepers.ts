@@ -22,10 +22,11 @@ export function renderKeeperHistory(payload: ReportPayload): string {
 
   return `
     <section class="section">
-      <!-- Heading + warning banner + table header are wrapped in a "lead" block
-           that must not be broken across pages. This guarantees that if the
-           Keeper History title is shown, the banner and at least the table
-           header travel with it (no orphaned heading at the bottom of a page). -->
+      <!-- The section-lead (heading + warning banner) is kept together and
+           glued to at least the first table row via break-after: avoid on the
+           section title. The table body is allowed to flow across pages so
+           it naturally fills the bottom of the preceding page rather than
+           jumping to a fresh page and leaving a gap behind it. -->
       <div class="section-lead">
         <div class="section-title"><span class="icon">◇</span> Keeper History (${esc(keepers.length)})</div>
         ${

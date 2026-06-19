@@ -51,7 +51,7 @@ html, body {
  * Margins tuned to maximise content area while leaving enough room for the
  * running header (~9mm tall) and footer (~7mm tall). Reduced from 28/20 to
  * 20/14 to remove excessive whitespace at the bottom of pages. */
-@page { size: A4; margin: 20mm 10mm 14mm 10mm; }
+@page { size: A4; margin: 22mm 10mm 16mm 10mm; }
 
 .page {
   /* No extra padding here — @page margin handles spacing from the page edge. */
@@ -68,38 +68,43 @@ small, .small { font-size: 8.5pt; color: var(--muted-fg); }
 .mono { font-family: 'JetBrains Mono', 'Menlo', 'Consolas', monospace; }
 
 /* ---------- Section header ---------- */
-.section { margin-top: 10px; }
+/* All section spacing is driven by these two values, kept large enough that
+   adjacent sections never visually collide but small enough that the report
+   still flows tightly and fills each page. */
+.section { margin-top: 14px; }
 .section-title {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12pt;
+  gap: 10px;
+  font-size: 12.5pt;
   color: var(--primary);
   font-weight: 700;
-  padding-bottom: 5px;
+  padding-bottom: 6px;
   border-bottom: 2px solid var(--accent);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 .section-title .icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px; height: 22px;
+  width: 23px; height: 23px;
   background: var(--secondary);
   color: var(--primary);
   border-radius: 6px;
   font-size: 11pt;
 }
 
-/* ---------- Cards / grid ---------- */
+/* ---------- Cards / grid ----------
+   All card-like surfaces share the same internal padding so the report has a
+   single rhythm — no card ever looks more cramped than any other. */
 .card {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 9px 12px;
+  padding: 12px 15px;
   break-inside: avoid;
 }
-.card + .card { margin-top: 6px; }
+.card + .card { margin-top: 9px; }
 .grid { display: grid; gap: 8px; }
 .grid-2 { grid-template-columns: repeat(2, 1fr); }
 .grid-3 { grid-template-columns: repeat(3, 1fr); }
@@ -109,21 +114,21 @@ small, .small { font-size: 8.5pt; color: var(--muted-fg); }
 .kv {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 2px 12px;
+  gap: 2px 14px;
 }
 .kv .row {
   display: contents;
 }
 .kv .k {
   color: var(--muted-fg);
-  font-size: 9pt;
-  padding: 3px 0;
+  font-size: 9.25pt;
+  padding: 4px 0;
   border-bottom: 1px dashed var(--border);
 }
 .kv .v {
   color: var(--fg);
-  font-size: 9.5pt;
-  padding: 3px 0;
+  font-size: 9.75pt;
+  padding: 4px 0;
   border-bottom: 1px dashed var(--border);
   text-align: right;
   font-weight: 500;
@@ -251,16 +256,27 @@ tbody tr:last-child td { border-bottom: none; }
 .cover .hero-stat .label { font-size: 7.5pt; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.06em; }
 .cover .hero-stat .value { font-size: 11pt; font-weight: 700; margin-top: 1px; }
 
-/* Hero vehicle image card (own row) */
+/* Page-break helper — forces the next section onto a new printed page.
+   Used to keep the cover/findings/observations together on page 1 and let
+   the vehicle hero photo open page 2. */
+.section--page-break {
+  break-before: page;
+  page-break-before: always;
+}
+
+/* Hero vehicle image card (own row). Now that the photo lives on page 2 it
+   has comfortable room to breathe, so we restore a larger silhouette. */
 .vehicle-image-block {
   position: relative;
   width: 100%;
-  height: 140px;
+  height: 180px;
   background: var(--secondary);
   border-radius: var(--radius);
   border: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center;
   overflow: hidden;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 .vehicle-image-block img {
   max-width: 92%; max-height: 92%; object-fit: contain;
@@ -290,15 +306,19 @@ tbody tr:last-child td { border-bottom: none; }
 }
 .plate.sm { font-size: 10pt; padding: 2px 6px; border-width: 1.5px; }
 
-/* ---------- Findings cards ---------- */
+/* ---------- Findings cards ----------
+   The Key Findings tiles get a touch more padding and bigger value type
+   than ordinary cards because they are the visual anchor of page 1, where
+   the vehicle photo no longer sits. The extra space helps the tile grid
+   fill the gap below the cover without feeling sparse. */
 .findings-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
 }
 .finding {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--card);
-  padding: 8px 10px;
+  padding: 13px 15px;
   break-inside: avoid;
   border-left-width: 4px;
 }
@@ -306,24 +326,28 @@ tbody tr:last-child td { border-bottom: none; }
 .finding.warn { border-left-color: var(--accent); }
 .finding.fail { border-left-color: var(--destructive); }
 .finding .label {
-  font-size: 7.5pt; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.06em;
+  font-size: 8.25pt; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.06em;
 }
 .finding .value {
-  font-size: 10.5pt; font-weight: 700; margin-top: 2px;
+  font-size: 11.5pt; font-weight: 700; margin-top: 4px;
 }
 .finding.ok .value   { color: var(--success); }
 .finding.warn .value { color: #8A6500; }
 .finding.fail .value { color: var(--destructive); }
 
-/* ---------- Observations ---------- */
-.observations { display: flex; flex-direction: column; gap: 6px; }
+/* ---------- Observations ----------
+   Same reasoning as .finding above — observation rows are the second half
+   of page 1 and have to fill the page now that the photo has moved off.
+   The extra row padding and slightly larger font give them the breathing
+   room the user asked for. */
+.observations { display: flex; flex-direction: column; gap: 9px; }
 .observation {
-  display: flex; gap: 8px; align-items: flex-start;
+  display: flex; gap: 11px; align-items: flex-start;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 7px 10px;
-  font-size: 9.5pt;
+  padding: 11px 14px;
+  font-size: 10pt;
   break-inside: avoid;
   page-break-inside: avoid;
 }
@@ -339,10 +363,10 @@ tbody tr:last-child td { border-bottom: none; }
 
 /* ---------- Status banner ---------- */
 .status-banner {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 12px;
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 14px;
   border-radius: var(--radius);
-  margin-top: 8px;
+  margin-top: 10px;
   font-size: 10pt;
 }
 .status-banner .dot { width: 10px; height: 10px; border-radius: 999px; }
@@ -354,40 +378,66 @@ tbody tr:last-child td { border-bottom: none; }
 .status-banner.fail .dot { background: var(--destructive); }
 
 /* ---------- Risk check grid ---------- */
-.risk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.risk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .risk {
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 10px 12px;
+  padding: 12px 14px;
   background: var(--card);
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 12px;
   break-inside: avoid;
 }
 .risk .pill {
-  width: 28px; height: 28px;
+  width: 30px; height: 30px;
   border-radius: 8px;
   display: inline-flex; align-items: center; justify-content: center;
   font-weight: 800; font-size: 10pt;
+  flex: 0 0 auto;
 }
 .risk.ok   .pill { background: #E8F4E9; color: var(--success); }
 .risk.warn .pill { background: #FFF6DA; color: #8A6500; }
 .risk.fail .pill { background: #FBE6E6; color: var(--destructive); }
-.risk .label { font-size: 9pt; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.05em; }
-.risk .value { font-size: 10.5pt; font-weight: 600; color: var(--fg); }
+.risk .label { font-size: 8.75pt; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.05em; }
+.risk .value { font-size: 10.75pt; font-weight: 600; color: var(--fg); margin-top: 2px; }
 
 /* ---------- Valuation tile grid ---------- */
-.val-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.val-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .val {
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 8px 11px;
+  padding: 11px 13px;
   background: linear-gradient(180deg, #FFFFFF, #FAFBFD);
 }
-.val .label { font-size: 8pt; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.05em; }
-.val .value { font-size: 13pt; font-weight: 800; color: var(--primary); margin-top: 1px; }
+.val .label { font-size: 8.25pt; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.05em; }
+.val .value { font-size: 13pt; font-weight: 800; color: var(--primary); margin-top: 3px; }
 .val.feature { background: var(--primary); color: #fff; border-color: var(--primary); }
 .val.feature .label { color: #ffffffcc; }
 .val.feature .value { color: #fff; font-size: 15pt; }
+
+/* ---------- MOT ---------- */
+/* Compact 4-tile lead-in strip that sits directly under the MOT History
+   heading. Same visual rhythm as .cost and .val tiles. Kept short so the
+   whole heading + summary block (~95px) can squeeze in at the bottom of a
+   page that still has room for it. */
+.mot-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.mot-stat {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  padding: 9px 12px;
+}
+.mot-stat .label {
+  font-size: 8pt; color: var(--muted-fg);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.mot-stat .value { font-size: 11pt; font-weight: 700; color: var(--primary); margin-top: 3px; }
+.mot-stat .mot-pf { display: flex; gap: 6px; flex-wrap: wrap; }
 
 /* ---------- MOT items ----------
    Each MOT test is a card. We intentionally allow them to break across pages
@@ -395,18 +445,18 @@ tbody tr:last-child td { border-bottom: none; }
    push the whole card onto the next page and leave half a page blank above.
    The card head row stays glued to at least the first advisory via
    break-after: avoid on .mot-head. */
-.mot-card { break-inside: auto; page-break-inside: auto; }
+.mot-card { break-inside: auto; page-break-inside: auto; margin-top: 9px; }
 .mot-head {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 4px;
+  gap: 10px;
+  margin-bottom: 7px;
   break-after: avoid; page-break-after: avoid;
 }
-.mot-head .left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.advisory-list { margin: 4px 0 0; padding: 0; list-style: none; }
+.mot-head .left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.advisory-list { margin: 6px 0 0; padding: 0; list-style: none; }
 .advisory-list li {
-  display: flex; gap: 8px; align-items: flex-start;
-  padding: 3px 0;
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 5px 0;
   border-top: 1px dashed var(--border);
   font-size: 9pt;
   break-inside: avoid; page-break-inside: avoid;
@@ -431,35 +481,35 @@ tbody tr:last-child td { border-bottom: none; }
 .tag.FAIL      { background: var(--destructive); color: #fff; }
 
 /* ---------- Running Costs ---------- */
-.cost-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.cost-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .cost {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: linear-gradient(180deg, #FFFFFF, #FAFBFD);
-  padding: 8px 10px;
+  padding: 11px 13px;
   break-inside: avoid;
 }
 .cost .label { font-size: 8.5pt; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.05em; }
-.cost .value { font-size: 13pt; font-weight: 800; color: var(--primary); margin-top: 2px; line-height: 1.1; }
-.cost .foot  { font-size: 8pt; color: var(--muted-fg); margin-top: 2px; }
+.cost .value { font-size: 13.5pt; font-weight: 800; color: var(--primary); margin-top: 4px; line-height: 1.1; }
+.cost .foot  { font-size: 8.25pt; color: var(--muted-fg); margin-top: 4px; }
 .cost.feature {
   background: var(--primary); color: #fff; border-color: var(--primary);
 }
 .cost.feature .label,
 .cost.feature .foot { color: #ffffffcc; }
-.cost.feature .value { color: #fff; font-size: 14pt; }
+.cost.feature .value { color: #fff; font-size: 14.5pt; }
 
 /* ---------- Write-off ----------
    Each record is a details card stacked directly above its own full-width
    damage diagram. The whole pair is wrapped in writeoff-record no-break so
    the diagram is never separated from the card it belongs to. */
-.writeoff-cards { display: flex; flex-direction: column; gap: 8px; }
+.writeoff-cards { display: flex; flex-direction: column; gap: 10px; }
 .writeoff-list  { display: block; }
-.writeoff-list > .writeoff-record + .writeoff-record { margin-top: 12px; }
+.writeoff-list > .writeoff-record + .writeoff-record { margin-top: 14px; }
 .writeoff-record {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 .writeoff-record .card,
 .writeoff-record .writeoff-diagram,
@@ -468,9 +518,29 @@ tbody tr:last-child td { border-bottom: none; }
   background: var(--secondary);
   border: 1px dashed var(--border);
   border-radius: var(--radius);
-  padding: 10px;
+  padding: 12px;
   text-align: center;
 }
+/* Damage areas strip sits at the bottom of each writeoff card. Kept as a
+   single flex row so multiple badges flow horizontally instead of stacking
+   into another full kv row (saves vertical space). */
+.writeoff-damage-strip {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 7px; padding-top: 7px;
+  border-top: 1px dashed var(--border);
+}
+.writeoff-damage-strip-label {
+  font-size: 9.25pt; color: var(--muted-fg);
+}
+.writeoff-damage-strip-value {
+  display: inline-flex; flex-wrap: wrap; gap: 4px;
+  font-size: 9.75pt; font-weight: 500;
+}
+/* Insurer / cause names can run long; in the 4-col writeoff kv we shave
+   half a point off the value font and reduce the gap so the most common
+   UK insurer/cause names fit on a single line instead of wrapping. */
+.writeoff-card .kv .k { font-size: 8.75pt; }
+.writeoff-card .kv .v { font-size: 9pt; }
 
 /* Mileage chart — flat aspect ratio set in the SVG viewBox so the rendered
    height fits comfortably below the write-off records on the same page. The
@@ -488,23 +558,34 @@ tbody tr:last-child td { border-bottom: none; }
   background: var(--secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 10px 14px 8px;
+  padding: 12px 16px 10px;
   break-inside: avoid;
   page-break-inside: avoid;
 }
 .damage-diagram-canvas {
   position: relative;
   width: 100%;
-  /* SVG fills the full horizontal width of the card. Small left/right inset
-     reserves just enough room for the rotated FRONT / REAR compass labels
-     (~14px each) without shrinking the car silhouette. The viewBox is ~2:1
-     (211 x 105) and aspect ratio is preserved by the SVG itself. */
+  /* The SVG silhouette still fills the full horizontal width of the card,
+     but we crop a fixed amount of vertical whitespace from the top and
+     bottom of the source artwork by forcing a flat ~17:6 (2.83:1) aspect on
+     the canvas and asking the SVG to "slice" (xMidYMid slice) — i.e. scale
+     to fill, crop excess. The car body occupies ~70% of the SVG viewBox
+     vertically, so this crop falls cleanly inside the surrounding
+     whitespace and never touches the wheels or roofline. The flatter aspect
+     also lets the per-record card + diagram pair land twice on a single
+     page rather than spilling onto a second page. */
   max-width: 100%;
   margin: 0 auto;
-  padding: 2px 16px;
+  padding: 4px 18px;
+  aspect-ratio: 17 / 6;
+  overflow: hidden;
 }
 .damage-diagram {
-  width: 100%; height: auto; display: block;
+  position: absolute;
+  inset: 4px 18px; /* match canvas padding so the SVG fills the inner area */
+  width: calc(100% - 36px);
+  height: calc(100% - 8px);
+  display: block;
 }
 /* Base car silhouette uses the artwork's original black fill so the outline
    and interior detail look exactly as drawn. (To recolour to brand primary,
@@ -580,44 +661,38 @@ tbody tr { break-inside: avoid; page-break-inside: avoid; }
 }
 
 /* ---------- Equipment ---------- */
-/* Multi-column layout (rather than grid) so equipment cards flow naturally
-   across page boundaries — when one card spills, the next column / page picks
-   up where it left off instead of leaving a chunk of whitespace below. */
-/* Use a CSS Grid 2-col layout (rather than multi-column) so that the grid
-   only takes as much vertical space as its content needs in print mode —
-   multi-column containers tend to reserve the full remaining page height,
-   which would push the disclaimer onto its own page. */
+/* 2-column CSS Grid with stretch alignment so paired left/right category
+   cards share the same row height. Wider columns mean fewer items wrap to
+   a second line, keeping the section tall enough to read comfortably but
+   short enough that the whole equipment list + disclaimer fit on one page. */
 .equip-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px 8px;
-  /* stretch (default) so the two boxes in each row share the same vertical
-     height — the shorter card grows to match its taller neighbour, giving the
-     section the clean, symmetrical look from the online Motovo view. */
+  gap: 12px;
   align-items: stretch;
 }
 .equip-cat {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--card);
-  padding: 6px 9px;
+  padding: 12px 15px;
   break-inside: avoid;
   page-break-inside: avoid;
 }
 .equip-cat h4 {
-  font-size: 8.75pt;
+  font-size: 9.75pt;
   color: var(--primary);
-  margin-bottom: 3px;
+  margin-bottom: 6px;
   display: flex; align-items: center; gap: 6px;
 }
 .equip-cat ul {
   margin: 0; padding: 0; list-style: none;
-  display: flex; flex-direction: column; gap: 0;
+  display: flex; flex-direction: column; gap: 2px;
 }
 .equip-cat li {
-  font-size: 8pt;
-  display: flex; gap: 5px; align-items: baseline;
-  line-height: 1.25;
+  font-size: 8.75pt;
+  display: flex; gap: 6px; align-items: baseline;
+  line-height: 1.4;
 }
 .equip-cat li::before {
   content: '';
@@ -628,6 +703,25 @@ tbody tr { break-inside: avoid; page-break-inside: avoid; }
   transform: translateY(1px);
 }
 .equip-cat .desc { color: var(--muted-fg); }
+
+/* ---------- Disclaimer footer-strip ----------
+   A compact, low-emphasis legal notice that sits at the bottom of the
+   equipment page. Rendered as a thin bordered block of muted text rather
+   than a full card so it's small enough to share the page with the
+   equipment grid. */
+.disclaimer-strip {
+  margin-top: 12px;
+  padding: 9px 13px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--secondary);
+  color: var(--muted-fg);
+  font-size: 8pt;
+  line-height: 1.4;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.disclaimer-strip strong { color: var(--primary); }
 
 /* ---------- Utilities ---------- */
 .row-between { display: flex; align-items: center; justify-content: space-between; gap: 8px; }

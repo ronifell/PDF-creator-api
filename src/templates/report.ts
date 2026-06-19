@@ -74,17 +74,15 @@ export function renderReportHtml(payload: ReportPayload): string {
           ${renderEquipment(
             payload,
             /* html */ `
-              <div class="disclaimer-strip card" style="margin-top:8px; background: var(--secondary); border-color: var(--border); padding:8px 11px;">
-                <h4 style="color: var(--primary); font-size:9.5pt;">Disclaimer &amp; Data Sources</h4>
-                <p class="small text-muted" style="margin-top:3px; font-size:8.25pt; line-height:1.35;">
-                  This report is compiled from third-party data feeds (DVLA, DVSA, MIAFTR insurance loss
-                  register, finance houses and trade valuation books) and is provided for informational
-                  purposes only. Mileage figures originate from DVSA MOT records. Valuations and running
-                  cost estimates are indicative and subject to market conditions. Every reasonable effort
-                  is made to ensure accuracy, however Motovo accepts no liability for any decision made
-                  on the basis of this report. Always verify VIN, mileage and condition in person before
-                  purchase.
-                </p>
+              <div class="disclaimer-strip">
+                <strong>Disclaimer &amp; Data Sources —</strong>
+                This report is compiled from third-party data feeds (DVLA, DVSA, MIAFTR insurance loss
+                register, finance houses and trade valuation books) and is provided for informational
+                purposes only. Mileage figures originate from DVSA MOT records. Valuations and running
+                cost estimates are indicative and subject to market conditions. Every reasonable effort
+                is made to ensure accuracy, however Motovo accepts no liability for any decision made
+                on the basis of this report. Always verify VIN, mileage and condition in person before
+                purchase.
               </div>
             `,
           )}

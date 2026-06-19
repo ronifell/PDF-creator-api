@@ -103,8 +103,8 @@ export async function generateReportPdf(payload: ReportPayload): Promise<Buffer>
       // they reserve the strip where Chromium renders the header/footer
       // templates. See styles.ts for the geometry.
       margin: {
-        top: '20mm',
-        bottom: '14mm',
+        top: '22mm',
+        bottom: '16mm',
         left: '10mm',
         right: '10mm',
       },

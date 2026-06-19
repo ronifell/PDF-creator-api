@@ -43,9 +43,16 @@ export function renderVehicleOverview(payload: ReportPayload): string {
     row('Country of origin', esc(v.country_of_origin)),
   ].join('');
 
+  // Vehicle Overview is allowed to flow across pages — each .card has
+  // break-inside: avoid so individual sub-blocks stay atomic, but the
+  // section as a whole can split if it would otherwise leave a half-empty
+  // page above. section-lead keeps the heading attached to at least the
+  // first row of data.
   return `
-    <section class="section no-break">
-      <div class="section-title"><span class="icon">▣</span> Vehicle Overview</div>
+    <section class="section">
+      <div class="section-lead">
+        <div class="section-title"><span class="icon">▣</span> Vehicle Overview</div>
+      </div>
       <div class="grid grid-2">
         <div class="card">
           <div class="kv">${leftRows}</div>

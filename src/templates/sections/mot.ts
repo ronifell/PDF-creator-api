@@ -59,28 +59,21 @@ export function renderMotHistory(payload: ReportPayload): string {
   if (!mot) return '';
 
   const tests = mot.tests || [];
+  const passCount = tests.filter((t) => t.passed === true).length;
+  const failCount = tests.filter((t) => t.passed === false).length;
+
+  // Compact 4-tile summary strip (matches the .cost / .val tile rhythm) — keeps
+  // the MOT lead-in short so it can land at the bottom of a page below the
+  // mileage chart without forcing the whole section to a new page.
   const summary = `
-    <div class="card">
-      <div class="kv">
-        <div class="row">
-          <div class="k">Latest test date</div>
-          <div class="v">${esc(fmtDate(mot.latest_test_date))}</div>
-        </div>
-        <div class="row">
-          <div class="k">Next due</div>
-          <div class="v">${esc(fmtDate(mot.mot_due_date))}</div>
-        </div>
-        <div class="row">
-          <div class="k">Tests on record</div>
-          <div class="v">${esc(tests.length)}</div>
-        </div>
-        <div class="row">
-          <div class="k">Pass / Fail</div>
-          <div class="v">
-            <span class="badge success">${esc(tests.filter((t) => t.passed === true).length)} pass</span>
-            &nbsp;
-            <span class="badge danger">${esc(tests.filter((t) => t.passed === false).length)} fail</span>
-          </div>
+    <div class="mot-summary">
+      <div class="mot-stat"><div class="label">Latest test</div><div class="value">${esc(fmtDate(mot.latest_test_date))}</div></div>
+      <div class="mot-stat"><div class="label">Next due</div><div class="value">${esc(fmtDate(mot.mot_due_date))}</div></div>
+      <div class="mot-stat"><div class="label">Tests on record</div><div class="value">${esc(tests.length)}</div></div>
+      <div class="mot-stat"><div class="label">Pass / Fail</div>
+        <div class="value mot-pf">
+          <span class="badge success">${esc(passCount)} pass</span>
+          <span class="badge danger">${esc(failCount)} fail</span>
         </div>
       </div>
     </div>
@@ -90,8 +83,10 @@ export function renderMotHistory(payload: ReportPayload): string {
 
   return `
     <section class="section">
-      <div class="section-title"><span class="icon">✓</span> MOT History</div>
-      ${summary}
+      <div class="section-lead">
+        <div class="section-title"><span class="icon">✓</span> MOT History</div>
+        ${summary}
+      </div>
       ${list || `<div class="text-muted small mt-2">No MOT tests recorded.</div>`}
     </section>
   `;

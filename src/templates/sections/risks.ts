@@ -71,9 +71,15 @@ export function renderRiskChecks(payload: ReportPayload): string {
     )
     .join('');
 
+  // The 9-cell risk grid is small enough to stay together in practice but
+  // doesn't get a forced no-break — if it ever has to share a page with
+  // tall preceding content, individual .risk tiles (each break-inside:avoid)
+  // can split naturally without leaving a gap above.
   return `
-    <section class="section no-break">
-      <div class="section-title"><span class="icon">⚠</span> Risk Checks Summary</div>
+    <section class="section">
+      <div class="section-lead">
+        <div class="section-title"><span class="icon">⚠</span> Risk Checks Summary</div>
+      </div>
       <div class="risk-grid">${cells}</div>
     </section>
   `;

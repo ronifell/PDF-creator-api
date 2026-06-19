@@ -27,8 +27,10 @@ export function renderValuation(payload: ReportPayload): string {
     .join('');
 
   return `
-    <section class="section no-break">
-      <div class="section-title"><span class="icon">£</span> Valuation</div>
+    <section class="section">
+      <div class="section-lead">
+        <div class="section-title"><span class="icon">£</span> Valuation</div>
+      </div>
       <div class="val-grid">${tileHtml}</div>
 
       <div class="card mt-2">

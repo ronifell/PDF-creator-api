@@ -203,7 +203,11 @@ export function renderCover(payload: ReportPayload): string {
 
     ${
       payload.image_url || payload.report_data?.images?.primary
-        ? `<section class="section no-break">
+        ? `<!-- Vehicle photo is intentionally pushed to page 2 (section--page-break)
+             so the cover, Key Findings and Key Observations on page 1 read as a
+             single composed summary spread. The photo then sits as a clean
+             header on page 2 above the Risk Checks Summary. -->
+          <section class="section section--page-break">
             <div class="vehicle-image-block" data-vrm="${escAttr(vrm)}">
               <img src="${escAttr(payload.image_url || payload.report_data?.images?.primary || '')}"
                    alt="${escAttr(`${year} ${make} ${model} stock photo`)}"

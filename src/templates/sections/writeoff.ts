@@ -38,18 +38,23 @@ function renderRecord(r: WriteoffRecord, index: number): string {
             Record #${esc(index + 1)} · Loss date: <strong>${esc(fmtDate(r.loss_date))}</strong>
           </div>
         </div>
-        <div class="kv" style="grid-template-columns: 1fr 1fr;">
+        <!-- 4-column kv so each visual row holds two key/value pairs. This halves
+             the card height vs. a single-column listing without sacrificing
+             readability — the labels stay left-aligned, the values right-aligned
+             within their column pair. -->
+        <div class="kv" style="grid-template-columns: auto 1fr auto 1fr; gap: 2px 16px;">
           <div class="row"><div class="k">Cause of damage</div><div class="v">${esc(r.cause_of_damage)}</div></div>
           <div class="row"><div class="k">Theft indicator</div><div class="v">${esc(r.theft_indicator)}</div></div>
           <div class="row"><div class="k">Insurer</div><div class="v">${esc(r.insurer)}</div></div>
           <div class="row"><div class="k">MIAFTR date</div><div class="v">${esc(fmtDate(r.miaftr_date))}</div></div>
-          <div class="row"><div class="k">Damage areas</div>
-            <div class="v">${
-              areas.length
-                ? areas.map((a) => `<span class="badge danger">${esc(a)}</span>`).join(' ')
-                : '—'
-            }</div>
-          </div>
+        </div>
+        <div class="writeoff-damage-strip">
+          <span class="writeoff-damage-strip-label">Damage areas</span>
+          <span class="writeoff-damage-strip-value">${
+            areas.length
+              ? areas.map((a) => `<span class="badge danger">${esc(a)}</span>`).join(' ')
+              : '—'
+          }</span>
         </div>
       </div>
 

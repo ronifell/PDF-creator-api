@@ -1,13 +1,26 @@
 /**
- * Insight extractors used by the cover-page Key Observations section.
+ * Key Observations — ported directly from the online Motovo
+ * <ObservationsPanel /> React component so the PDF tells exactly the same
+ * story as the dealer-facing web view.
  *
- * These functions scan MOT advisories + mileage history to surface
- * "story-level" findings (repeated tyre/brake/suspension issues, dangerous
- * defects, MOT failures, oil-leak mentions, mileage consistency) so the front
- * of the report reads like a premium summary rather than a data dump.
+ * Order of items (top → bottom):
+ *   1. Police stolen marker (good / bad)
+ *   2. Outstanding finance (good / warn)
+ *   3. Write-off records   (good / bad)
+ *   4. Scrapped / certificate-of-destruction (bad, only if true)
+ *   5. High recent keeper turnover (warn, only if flagged)
+ *   6. Latest MOT result with advisory count (good / warn / bad)
+ *   7. Repeated advisory themes — only emitted when a keyword appears
+ *      in ≥3 advisories across all MOT history.
+ *      Themes: suspension, exhaust, tyre, brake, oil, rust, wiper.
+ *   8. Vehicle tax validity (good / bad)
+ *
+ * The list is then capped at MAX_VISIBLE (10) items so the cover stays clean.
+ * If we exceed the cap, "ok" observations are dropped from the end first,
+ * then "warn" — never a "fail" item.
  */
 
-import { Advisory, MileagePoint, MotTest, ReportPayload } from '../types/report';
+import { MileagePoint, MotTest, ReportPayload } from '../types/report';
 import { parseDate } from './helpers';
 
 export type Tone = 'ok' | 'warn' | 'fail';
@@ -15,57 +28,36 @@ export type Tone = 'ok' | 'warn' | 'fail';
 export interface InsightItem {
   tone: Tone;
   text: string;
-  /** Where it came from — purely informational, kept for future use. */
   source?: 'risk' | 'mot' | 'mileage' | 'history';
 }
 
-/** Buckets of keywords whose appearance across MOT records we want to surface. */
-const KEYWORD_BUCKETS: Array<{ label: string; tone: Tone; words: RegExp[] }> = [
-  { label: 'tyre',       tone: 'warn', words: [/\btyre/i, /\btyres\b/i, /tread/i] },
-  { label: 'brake',      tone: 'warn', words: [/\bbrake\b/i, /\bbrakes\b/i, /handbrake/i] },
-  { label: 'suspension', tone: 'warn', words: [/suspension/i, /ball ?joint/i, /shock absorber/i, /strut/i] },
-  { label: 'headlamp',   tone: 'warn', words: [/headlamp/i, /headlight/i] },
-];
+/** Advisory keyword themes — same list as the online Observations panel. */
+const ADVISORY_THEMES = [
+  'suspension',
+  'exhaust',
+  'tyre',
+  'brake',
+  'oil',
+  'rust',
+  'wiper',
+] as const;
 
-const OIL_LEAK_RE = /oil\s*leak/i;
-const MIN_RECORDS_FOR_REPEAT = 2; // surface only when seen in ≥2 separate tests
+const THEME_MIN_COUNT = 3;
+const MAX_VISIBLE = 10;
 
-interface AdvisoryWithTest {
-  test: MotTest;
-  adv: Advisory;
-}
-
-function flattenAdvisories(tests: MotTest[]): AdvisoryWithTest[] {
-  const out: AdvisoryWithTest[] = [];
-  for (const test of tests) {
-    for (const adv of test.advisories || []) {
-      out.push({ test, adv });
+function flattenAdvisoryText(tests: MotTest[]): string[] {
+  const out: string[] = [];
+  for (const t of tests) {
+    for (const a of t.advisories || []) {
+      if (a.text) out.push(a.text.toLowerCase());
     }
   }
   return out;
 }
 
-/**
- * Count distinct MOT tests (not advisories) that contain advisories matching
- * any of the keywords in a bucket. We dedupe per-test so a single test with
- * five tyre advisories counts as 1 record, not 5 — matching the wording in
- * the online view ("Repeated 'tyre' advisories across 9 MOT records").
- */
-function countTestsMatchingBucket(tests: MotTest[], words: RegExp[]): number {
-  let count = 0;
-  for (const test of tests) {
-    const advs = test.advisories || [];
-    if (advs.some((a) => words.some((rx) => rx.test(a.text || '')))) {
-      count++;
-    }
-  }
-  return count;
-}
-
 function checkMileageConsistency(trend: MileagePoint[]): {
   consistent: boolean;
   decreases: number;
-  bigJumpDays?: number;
 } {
   const pts = (trend || [])
     .map((p) => ({ d: parseDate(p.date), m: Number(p.mileage) }))
@@ -76,154 +68,136 @@ function checkMileageConsistency(trend: MileagePoint[]): {
 
   let decreases = 0;
   for (let i = 1; i < pts.length; i++) {
-    // small back-steps (≤ 50 mi) are noise — UKVD often lists two reads on
-    // the same day at slightly different odometer values.
+    // ≤50 mi back-steps are noise (UKVD sometimes lists two reads on the same
+    // day at slightly different odometer values).
     if (pts[i].m + 50 < pts[i - 1].m) decreases++;
   }
   return { consistent: decreases === 0, decreases };
 }
 
+/** Drop "ok" then "warn" items from the end until we fit MAX_VISIBLE. */
+function capObservations(items: InsightItem[], max = MAX_VISIBLE): InsightItem[] {
+  if (items.length <= max) return items;
+  const result = [...items];
+  for (const tone of ['ok', 'warn'] as const) {
+    for (let i = result.length - 1; i >= 0 && result.length > max; i--) {
+      if (result[i].tone === tone) result.splice(i, 1);
+    }
+    if (result.length <= max) break;
+  }
+  return result.slice(0, max);
+}
+
 /**
- * Compute all observations for the cover, blending the existing risk-flag
- * findings with MOT-derived insights.
+ * Build the Key Observations list shown on the cover page.
+ *
+ * Mirrors `ObservationsPanel` from the online Motovo view (same wording,
+ * same severity, same item order).
  */
 export function gatherObservations(payload: ReportPayload): InsightItem[] {
   const out: InsightItem[] = [];
   const r = payload.report_data;
   const tests = r?.mot?.tests || [];
-  const trend = r?.mot?.mileage_trend || [];
 
-  // -------------------- Core risk story ----------------------
-  out.push(
-    r?.is_stolen
-      ? { tone: 'fail', text: 'Reported as STOLEN on the Police National Computer.', source: 'risk' }
-      : { tone: 'ok',   text: 'Not recorded as stolen on the Police National Computer.', source: 'risk' },
-  );
+  // 1. Police stolen marker
+  if (r?.is_stolen) {
+    out.push({ tone: 'fail', text: 'Vehicle reported as STOLEN on PNC — do not proceed.', source: 'risk' });
+  } else {
+    out.push({ tone: 'ok', text: 'No police stolen marker found.', source: 'risk' });
+  }
 
+  // 2. Outstanding finance
   const financeCount = r?.finance?.records?.length ?? 0;
-  out.push(
-    financeCount > 0
-      ? { tone: 'fail', text: `${financeCount} outstanding finance record${financeCount === 1 ? '' : 's'} found.`, source: 'risk' }
-      : { tone: 'ok',   text: 'No outstanding finance records found.', source: 'risk' },
-  );
+  if (financeCount > 0) {
+    out.push({
+      tone: 'warn',
+      text: `${financeCount} finance record${financeCount === 1 ? '' : 's'} found — verify settlement before purchase.`,
+      source: 'risk',
+    });
+  } else {
+    out.push({ tone: 'ok', text: 'No outstanding finance records found.', source: 'risk' });
+  }
 
+  // 3. Write-off records
   const writeoffCount = r?.writeoff?.records?.length ?? 0;
   if (writeoffCount > 0) {
     out.push({
       tone: 'fail',
-      text: `${writeoffCount} write-off record${writeoffCount === 1 ? '' : 's'} found — inspect structural integrity.`,
+      text: `${writeoffCount} write-off record${writeoffCount === 1 ? '' : 's'} found — category check advised.`,
       source: 'risk',
     });
+  } else {
+    out.push({ tone: 'ok', text: 'No write-off records found.', source: 'risk' });
   }
 
-  if (payload.has_high_keeper_turnover) {
-    const n = r?.history?.keeper_changes?.length ?? 0;
+  // 4. Scrapped / certificate of destruction (only when true)
+  if (r?.history?.is_scrapped || r?.history?.certificate_of_destruction) {
     out.push({
-      tone: 'warn',
-      text: `High keeper turnover detected (${n} keeper changes) — review ownership reasons carefully.`,
+      tone: 'fail',
+      text: 'Vehicle has been scrapped or has a Certificate of Destruction — do not purchase.',
       source: 'history',
     });
   }
 
-  if (r?.tax?.is_valid)         out.push({ tone: 'ok', text: 'Vehicle tax is currently valid.', source: 'risk' });
-  else if (r?.tax?.tax_due_date) out.push({ tone: 'warn', text: 'Vehicle tax is not currently valid — verify SORN/relicense.', source: 'risk' });
-
-  if (r?.history?.imported)        out.push({ tone: 'warn', text: 'Vehicle imported into the UK.', source: 'history' });
-  if (r?.history?.exported)        out.push({ tone: 'warn', text: 'Vehicle exported from the UK.',  source: 'history' });
-  if (r?.history?.is_scrapped)     out.push({ tone: 'fail', text: 'Vehicle recorded as scrapped.',  source: 'history' });
-  if (r?.history?.certificate_of_destruction) {
-    out.push({ tone: 'fail', text: 'Certificate of destruction issued — vehicle should not be on the road.', source: 'history' });
-  }
-
-  // -------------------- MOT-derived insights ----------------------
-  const flat = flattenAdvisories(tests);
-
-  // Dangerous defects → always elevate
-  const dangerousCount = flat.filter((a) => (a.adv.type || '').toUpperCase() === 'DANGEROUS').length;
-  if (dangerousCount > 0) {
-    out.push({
-      tone: 'fail',
-      text: `${dangerousCount} DANGEROUS defect${dangerousCount === 1 ? '' : 's'} flagged in MOT history — verify each has been rectified.`,
-      source: 'mot',
-    });
-  }
-
-  // MOT failures (passed: false)
-  const failureCount = tests.filter((t) => t.passed === false).length;
-  if (failureCount > 0) {
+  // 5. High recent keeper turnover (only when flagged)
+  if (payload.has_high_keeper_turnover) {
+    const n = r?.history?.keeper_changes?.length ?? 0;
     out.push({
       tone: 'warn',
-      text: `${failureCount} MOT failure${failureCount === 1 ? '' : 's'} on record — confirm fault categories and subsequent rectification.`,
-      source: 'mot',
+      text: `High recent keeper turnover detected (${n} keeper changes) — review carefully.`,
+      source: 'history',
     });
   }
 
-  // Repeated keyword advisories (tyre, brake, suspension, headlamp)
-  for (const bucket of KEYWORD_BUCKETS) {
-    const matchCount = countTestsMatchingBucket(tests, bucket.words);
-    if (matchCount >= MIN_RECORDS_FOR_REPEAT) {
+  // 6. Latest MOT result (tests are stored newest-first in the payload)
+  const latestMot = tests[0];
+  if (latestMot) {
+    const advisoryCount = latestMot.advisories?.length || 0;
+    const passed = latestMot.passed === true;
+    const failed = latestMot.passed === false;
+    if (passed && advisoryCount > 0) {
       out.push({
-        tone: bucket.tone,
-        text: `Repeated "${bucket.label}" advisories across ${matchCount} MOT record${matchCount === 1 ? '' : 's'} — inspect carefully.`,
+        tone: 'warn',
+        text: `Latest MOT passed with ${advisoryCount} advisor${advisoryCount === 1 ? 'y' : 'ies'}.`,
+        source: 'mot',
+      });
+    } else if (passed) {
+      out.push({ tone: 'ok', text: 'Latest MOT passed with no advisories.', source: 'mot' });
+    } else if (failed) {
+      out.push({ tone: 'fail', text: 'Most recent MOT test failed.', source: 'mot' });
+    }
+  }
+
+  // 7. Repeated advisory themes — only when >=3 advisories mention the keyword
+  //    across all MOT history (matches the React panel's threshold exactly).
+  const allAdvisoryText = flattenAdvisoryText(tests);
+  for (const theme of ADVISORY_THEMES) {
+    const count = allAdvisoryText.filter((t) => t.includes(theme)).length;
+    if (count >= THEME_MIN_COUNT) {
+      out.push({
+        tone: 'warn',
+        text: `Repeated "${theme}" advisories across ${count} MOT records — inspect carefully.`,
         source: 'mot',
       });
     }
   }
 
-  // Oil leak mention — even a single one is worth surfacing
-  const oilLeaks = flat.filter((a) => OIL_LEAK_RE.test(a.adv.text || ''));
-  if (oilLeaks.length > 0) {
-    out.push({
-      tone: 'warn',
-      text: `Oil leak noted in ${oilLeaks.length} MOT advisor${oilLeaks.length === 1 ? 'y' : 'ies'} — request a recent service history.`,
-      source: 'mot',
-    });
+  // 8. Vehicle tax validity
+  if (r?.tax?.is_valid === true) {
+    out.push({ tone: 'ok', text: 'Vehicle tax currently valid.', source: 'risk' });
+  } else if (r?.tax?.is_valid === false) {
+    out.push({ tone: 'fail', text: 'Vehicle is NOT currently taxed.', source: 'risk' });
   }
 
-  // MOT validity (positive observation if valid)
-  if (r?.tax?.mot_status === 'Valid' && r?.mot?.mot_due_date) {
-    out.push({
-      tone: 'ok',
-      text: `MOT currently valid until ${formatShortDate(r.mot.mot_due_date)}.`,
-      source: 'mot',
-    });
-  }
-
-  // -------------------- Mileage consistency ----------------------
-  const mileageStatus = checkMileageConsistency(trend);
-  if (mileageStatus.consistent) {
-    out.push({
-      tone: 'ok',
-      text: 'Mileage progression appears consistent across MOT records.',
-      source: 'mileage',
-    });
-  } else {
-    out.push({
-      tone: 'fail',
-      text: `Mileage discrepancy detected (${mileageStatus.decreases} step${mileageStatus.decreases === 1 ? '' : 's'} backwards) — investigate before purchase.`,
-      source: 'mileage',
-    });
-  }
-
-  return out;
+  return capObservations(out);
 }
 
-/** Local mileage check exported for the Mileage Progression section. */
+/** Mileage discrepancy detector — used by Mileage Progression to decide
+ *  whether to show the full table or just the chart + summary. */
 export function detectMileageDiscrepancy(trend: MileagePoint[] | undefined): {
   hasDiscrepancy: boolean;
   decreases: number;
 } {
   const r = checkMileageConsistency(trend || []);
   return { hasDiscrepancy: !r.consistent, decreases: r.decreases };
-}
-
-function formatShortDate(iso: string): string {
-  const d = parseDate(iso);
-  if (!d) return iso;
-  return d.toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
 }

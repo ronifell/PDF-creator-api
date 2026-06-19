@@ -49,11 +49,12 @@ export function renderEquipment(payload: ReportPayload, trailer = ''): string {
       </div>`
     : '';
 
-  // Render the equipment grid and any trailing content (e.g. the disclaimer
-  // card) inside a single <section>. Keeping them as siblings of the same
-  // section block gives Chromium a unified flow context, which lets the
-  // disclaimer slide into the strip below the grid on the same page instead
-  // of being pushed onto its own page.
+  // The Equipment List flows naturally after Valuation. Each category card is
+  // break-inside:avoid so individual categories never split mid-page; the
+  // grid as a whole is free to break wherever it can, which lets earlier
+  // pages fill up cleanly before the rest spills over. The disclaimer trailer
+  // sits inside the same <section> so it slides into any empty strip
+  // remaining below the grid on the final page.
   return `
     <section class="section">
       <div class="section-title"><span class="icon">⚙</span> Standard Equipment (${esc(standard.length)})</div>
