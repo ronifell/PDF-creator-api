@@ -417,12 +417,13 @@ tbody tr:last-child td { border-bottom: none; }
 /* ---------- MOT ---------- */
 /* Compact 4-tile lead-in strip that sits directly under the MOT History
    heading. Same visual rhythm as .cost and .val tiles. Kept short so the
-   whole heading + summary block (~95px) can squeeze in at the bottom of a
-   page that still has room for it. */
+   whole heading + summary block can squeeze in at the bottom of a page
+   that still has room for it. Slightly taller tiles + card spacing push
+   Keeper History to start on its own page after the last MOT test. */
 .mot-summary {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  gap: 12px;
   break-inside: avoid;
   page-break-inside: avoid;
 }
@@ -430,7 +431,7 @@ tbody tr:last-child td { border-bottom: none; }
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--card);
-  padding: 9px 12px;
+  padding: 11px 13px;
 }
 .mot-stat .label {
   font-size: 8pt; color: var(--muted-fg);
@@ -445,18 +446,23 @@ tbody tr:last-child td { border-bottom: none; }
    push the whole card onto the next page and leave half a page blank above.
    The card head row stays glued to at least the first advisory via
    break-after: avoid on .mot-head. */
-.mot-card { break-inside: auto; page-break-inside: auto; margin-top: 9px; }
+.mot-card {
+  break-inside: auto;
+  page-break-inside: auto;
+  margin-top: 13px;
+  padding: 14px 16px;
+}
 .mot-head {
   display: flex; align-items: center; justify-content: space-between;
   gap: 10px;
-  margin-bottom: 7px;
+  margin-bottom: 9px;
   break-after: avoid; page-break-after: avoid;
 }
 .mot-head .left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.advisory-list { margin: 6px 0 0; padding: 0; list-style: none; }
+.advisory-list { margin: 8px 0 0; padding: 0; list-style: none; }
 .advisory-list li {
   display: flex; gap: 10px; align-items: flex-start;
-  padding: 5px 0;
+  padding: 7px 0;
   border-top: 1px dashed var(--border);
   font-size: 9pt;
   break-inside: avoid; page-break-inside: avoid;
