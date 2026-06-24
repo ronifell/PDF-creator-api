@@ -100,6 +100,35 @@ function findings(payload: ReportPayload): Finding[] {
   ];
 }
 
+function vehicleImageHtml(payload: ReportPayload, vrm: string, year: number | string, make: string, model: string): string {
+  const src = payload.image_url || payload.report_data?.images?.primary;
+  if (!src) return '';
+
+  // Remote URLs are resolved to data URLs in pdfService before render. If we
+  // still have an http(s) src here the fetch failed — show the fallback.
+  const resolved = src.startsWith('data:');
+  const label = `${year} ${make} ${model}`.trim();
+
+  return `<!-- Vehicle photo is intentionally pushed to page 2 (section--page-break)
+             so the cover, Key Findings and Key Observations on page 1 read as a
+             single composed summary spread. The photo then sits as a clean
+             header on page 2 above the Risk Checks Summary. -->
+          <section class="section section--page-break">
+            <div class="vehicle-image-block${resolved ? '' : ' image-missing'}" data-vrm="${escAttr(vrm)}">
+              ${
+                resolved
+                  ? `<img src="${escAttr(src)}"
+                     alt="${escAttr(`${label} stock photo`)}" />`
+                  : ''
+              }
+              <div class="vehicle-image-fallback">
+                <span class="badge solid-primary">PHOTO UNAVAILABLE</span>
+                <div class="text-muted small">${escAttr(label)}</div>
+              </div>
+            </div>
+          </section>`;
+}
+
 function observationsHtml(payload: ReportPayload): string {
   const items = gatherObservations(payload);
   return `
@@ -201,25 +230,6 @@ export function renderCover(payload: ReportPayload): string {
       ${observationsHtml(payload)}
     </section>
 
-    ${
-      payload.image_url || payload.report_data?.images?.primary
-        ? `<!-- Vehicle photo is intentionally pushed to page 2 (section--page-break)
-             so the cover, Key Findings and Key Observations on page 1 read as a
-             single composed summary spread. The photo then sits as a clean
-             header on page 2 above the Risk Checks Summary. -->
-          <section class="section section--page-break">
-            <div class="vehicle-image-block" data-vrm="${escAttr(vrm)}">
-              <img src="${escAttr(payload.image_url || payload.report_data?.images?.primary || '')}"
-                   alt="${escAttr(`${year} ${make} ${model} stock photo`)}"
-                   referrerpolicy="no-referrer"
-                   onerror="this.closest('.vehicle-image-block')?.classList.add('image-missing'); this.remove();" />
-              <div class="vehicle-image-fallback">
-                <span class="badge solid-primary">PHOTO UNAVAILABLE</span>
-                <div class="text-muted small">${escAttr(`${year} ${make} ${model}`.trim())}</div>
-              </div>
-            </div>
-          </section>`
-        : ''
-    }
+    ${vehicleImageHtml(payload, vrm, year, make, model)}
   `;
 }

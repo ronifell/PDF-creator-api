@@ -269,18 +269,27 @@ tbody tr:last-child td { border-bottom: none; }
 .vehicle-image-block {
   position: relative;
   width: 100%;
-  height: 180px;
+  height: 210px;
   background: var(--secondary);
   border-radius: var(--radius);
   border: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
+  padding: 2px 18px 18px;
+  box-sizing: border-box;
   break-inside: avoid;
   page-break-inside: avoid;
 }
 .vehicle-image-block img {
-  max-width: 92%; max-height: 92%; object-fit: contain;
   display: block;
+  width: auto;
+  height: auto;
+  max-width: 96%;
+  max-height: 100%;
+  object-fit: scale-down;
+  object-position: center center;
 }
 .vehicle-image-block .vehicle-image-fallback {
   display: none;
@@ -377,28 +386,32 @@ tbody tr:last-child td { border-bottom: none; }
 .status-banner.fail { background: #FBE6E6; color: #7E1B1B; border: 1px solid #EFB6B6; }
 .status-banner.fail .dot { background: var(--destructive); }
 
-/* ---------- Risk check grid ---------- */
-.risk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+/* ---------- Risk check grid ----------
+   Compact tiles so Risk Checks + Vehicle Overview fit on page 2 below
+   the hero photo without forcing a page break between them. */
+.risk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .risk {
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px 14px;
+  border-radius: 6px;
+  padding: 6px 8px;
   background: var(--card);
-  display: flex; align-items: center; gap: 12px;
+  display: flex; align-items: center; gap: 7px;
   break-inside: avoid;
 }
 .risk .pill {
-  width: 30px; height: 30px;
-  border-radius: 8px;
+  width: 22px; height: 22px;
+  border-radius: 6px;
   display: inline-flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 10pt;
+  font-weight: 800; font-size: 8pt;
   flex: 0 0 auto;
 }
 .risk.ok   .pill { background: #E8F4E9; color: var(--success); }
 .risk.warn .pill { background: #FFF6DA; color: #8A6500; }
 .risk.fail .pill { background: #FBE6E6; color: var(--destructive); }
-.risk .label { font-size: 8.75pt; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.05em; }
-.risk .value { font-size: 10.75pt; font-weight: 600; color: var(--fg); margin-top: 2px; }
+.risk .label { font-size: 7pt; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.2; }
+.risk .value { font-size: 9pt; font-weight: 600; color: var(--fg); margin-top: 1px; line-height: 1.2; }
+.section--tight { margin-top: 8px; }
+.section--tight .section-title { margin-bottom: 6px; padding-bottom: 4px; }
 
 /* ---------- Valuation tile grid ---------- */
 .val-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }

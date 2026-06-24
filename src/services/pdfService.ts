@@ -1,4 +1,5 @@
 import { Browser, chromium } from 'playwright';
+import { enrichPayloadWithVehicleImage } from './imageResolver';
 import { renderReportHtml, renderHeaderHtml, renderFooterHtml } from '../templates/report';
 import { ReportPayload } from '../types/report';
 
@@ -56,11 +57,15 @@ export async function generateReportPdf(payload: ReportPayload): Promise<Buffer>
   const context = await browser.newContext({
     viewport: { width: 1240, height: 1754 }, // ~A4 @ 150dpi
     deviceScaleFactor: 2,
+    extraHTTPHeaders: {
+      Referer: 'https://www.ukvehicledata.co.uk/',
+    },
   });
   const page = await context.newPage();
 
   try {
-    const html = renderReportHtml(payload);
+    const enriched = await enrichPayloadWithVehicleImage(payload, context.request);
+    const html = renderReportHtml(enriched);
     await page.setContent(html, { waitUntil: 'networkidle', timeout: 30_000 });
 
     // Wait for fonts & images to be ready (best-effort).
@@ -97,8 +102,8 @@ export async function generateReportPdf(payload: ReportPayload): Promise<Buffer>
       printBackground: true,
       preferCSSPageSize: true,
       displayHeaderFooter: true,
-      headerTemplate: renderHeaderHtml(payload),
-      footerTemplate: renderFooterHtml(payload),
+      headerTemplate: renderHeaderHtml(enriched),
+      footerTemplate: renderFooterHtml(enriched),
       // Margins MUST stay in lockstep with the @page rule in styles.ts —
       // they reserve the strip where Chromium renders the header/footer
       // templates. See styles.ts for the geometry.

@@ -15,7 +15,6 @@ export function renderKeeperHistory(payload: ReportPayload): string {
       <tr>
         <td><strong>Keeper #${esc(k.number_of_previous_keepers ?? '—')}</strong></td>
         <td>${esc(fmtDate(k.keeper_start_date))}</td>
-        <td>${esc(fmtDate(k.previous_keeper_disposal_date))}</td>
       </tr>`,
     )
     .join('');
@@ -42,9 +41,8 @@ export function renderKeeperHistory(payload: ReportPayload): string {
         <table>
           <thead>
             <tr>
-              <th style="width:30%">Keeper</th>
+              <th style="width:40%">Keeper</th>
               <th>Start date</th>
-              <th>Previous disposal</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>

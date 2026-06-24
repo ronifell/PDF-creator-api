@@ -76,7 +76,7 @@ export function renderRiskChecks(payload: ReportPayload): string {
   // tall preceding content, individual .risk tiles (each break-inside:avoid)
   // can split naturally without leaving a gap above.
   return `
-    <section class="section">
+    <section class="section section--tight">
       <div class="section-lead">
         <div class="section-title"><span class="icon">⚠</span> Risk Checks Summary</div>
       </div>

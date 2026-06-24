@@ -15,7 +15,10 @@
  *      Themes: suspension, exhaust, tyre, brake, oil, rust, wiper.
  *   8. Vehicle tax validity (good / bad)
  *
- * The list is then capped at MAX_VISIBLE (10) items so the cover stays clean.
+ * Items are then grouped by severity — green (ok), red (fail), orange (warn)
+ * — so each colour band reads together on the cover page.
+ *
+ * The list is capped at MAX_VISIBLE (10) items so the cover stays clean.
  * If we exceed the cap, "ok" observations are dropped from the end first,
  * then "warn" — never a "fail" item.
  */
@@ -75,6 +78,13 @@ function checkMileageConsistency(trend: MileagePoint[]): {
   return { consistent: decreases === 0, decreases };
 }
 
+const TONE_ORDER: Record<Tone, number> = { ok: 0, fail: 1, warn: 2 };
+
+/** Group observations by severity: green, then red, then orange. */
+function sortObservationsByTone(items: InsightItem[]): InsightItem[] {
+  return [...items].sort((a, b) => TONE_ORDER[a.tone] - TONE_ORDER[b.tone]);
+}
+
 /** Drop "ok" then "warn" items from the end until we fit MAX_VISIBLE. */
 function capObservations(items: InsightItem[], max = MAX_VISIBLE): InsightItem[] {
   if (items.length <= max) return items;
@@ -91,8 +101,8 @@ function capObservations(items: InsightItem[], max = MAX_VISIBLE): InsightItem[]
 /**
  * Build the Key Observations list shown on the cover page.
  *
- * Mirrors `ObservationsPanel` from the online Motovo view (same wording,
- * same severity, same item order).
+ * Mirrors `ObservationsPanel` from the online Motovo view (same wording
+ * and severity), grouped green → red → orange for the PDF cover layout.
  */
 export function gatherObservations(payload: ReportPayload): InsightItem[] {
   const out: InsightItem[] = [];
@@ -176,7 +186,7 @@ export function gatherObservations(payload: ReportPayload): InsightItem[] {
     if (count >= THEME_MIN_COUNT) {
       out.push({
         tone: 'warn',
-        text: `Repeated "${theme}" advisories across ${count} MOT records — inspect carefully.`,
+        text: `Repeated "${theme}" advisories found across multiple MOTs — inspect carefully.`,
         source: 'mot',
       });
     }
@@ -189,7 +199,7 @@ export function gatherObservations(payload: ReportPayload): InsightItem[] {
     out.push({ tone: 'fail', text: 'Vehicle is NOT currently taxed.', source: 'risk' });
   }
 
-  return capObservations(out);
+  return capObservations(sortObservationsByTone(out));
 }
 
 /** Mileage discrepancy detector — used by Mileage Progression to decide
