@@ -53,7 +53,14 @@ export interface KeeperChange {
 
 export interface PlateChange {
   date?: string | null;
+  /**
+   * Kept for backwards-compat with older sample payloads. Newer feeds
+   * (DVLA/VDG) use `previous_vrm` / `current_vrm` instead — see below.
+   */
   vrm?: string;
+  previous_vrm?: string;
+  current_vrm?: string;
+  transfer_type?: string;
 }
 
 export interface HistoryInfo {
@@ -224,6 +231,21 @@ export interface ReportData {
   images?: ImagesInfo;
 }
 
+/**
+ * Report audience.
+ *
+ *   dealer — full report including trade valuations and dealer-only tiles.
+ *            Footer wording is "Confidential — for dealer use only".
+ *   public — consumer-facing report. Trade valuations (trade retail, trade
+ *            average, part-exchange, auction) are hidden. Footer wording is
+ *            "For your reference — not for resale distribution". Title
+ *            changes from "Dealer Vehicle History Report" to just
+ *            "Vehicle History Report".
+ *
+ * Defaults to "dealer" so existing integrations keep behaving as before.
+ */
+export type ReportMode = 'dealer' | 'public';
+
 export interface ReportPayload {
   id?: string;
   registration_number?: string;
@@ -244,5 +266,6 @@ export interface ReportPayload {
   created_date?: string | null;
   updated_date?: string | null;
   dealer_user_email?: string | null;
+  report_mode?: ReportMode;
   report_data?: ReportData;
 }

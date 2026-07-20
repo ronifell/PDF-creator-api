@@ -25,6 +25,7 @@
 
 import { MileagePoint, MotTest, ReportPayload } from '../types/report';
 import { parseDate } from './helpers';
+import { realWriteoffRecords } from './sections/writeoff';
 
 export type Tone = 'ok' | 'warn' | 'fail';
 
@@ -116,28 +117,39 @@ export function gatherObservations(payload: ReportPayload): InsightItem[] {
     out.push({ tone: 'ok', text: 'No police stolen marker found.', source: 'risk' });
   }
 
-  // 2. Outstanding finance
+  // 2. Outstanding finance — prefer record count when supplied, fall back to
+  //    the marker flag so we still surface finance when only the boolean was
+  //    supplied by the feed.
   const financeCount = r?.finance?.records?.length ?? 0;
+  const financeMarker = !!(payload.has_finance_flag || r?.has_finance);
   if (financeCount > 0) {
     out.push({
-      tone: 'warn',
-      text: `${financeCount} finance record${financeCount === 1 ? '' : 's'} found — verify settlement before purchase.`,
+      tone: 'fail',
+      text: `${financeCount} finance record${financeCount === 1 ? '' : 's'} found — obtain written settlement confirmation before purchase.`,
+      source: 'risk',
+    });
+  } else if (financeMarker) {
+    out.push({
+      tone: 'fail',
+      text: 'Active finance marker recorded — agreement details not supplied. Obtain written settlement confirmation before purchase.',
       source: 'risk',
     });
   } else {
     out.push({ tone: 'ok', text: 'No outstanding finance records found.', source: 'risk' });
   }
 
-  // 3. Write-off records
-  const writeoffCount = r?.writeoff?.records?.length ?? 0;
+  // 3. Write-off records — filtered to REAL insurance write-offs (with a
+  //    category code or status cue), so stolen-only entries the feed
+  //    misfiled here don't trigger "category check advised".
+  const writeoffCount = realWriteoffRecords(r?.writeoff?.records).length;
   if (writeoffCount > 0) {
     out.push({
       tone: 'fail',
-      text: `${writeoffCount} write-off record${writeoffCount === 1 ? '' : 's'} found — category check advised.`,
+      text: `${writeoffCount} insurance write-off record${writeoffCount === 1 ? '' : 's'} found — category check advised.`,
       source: 'risk',
     });
   } else {
-    out.push({ tone: 'ok', text: 'No write-off records found.', source: 'risk' });
+    out.push({ tone: 'ok', text: 'No insurance write-off records found.', source: 'risk' });
   }
 
   // 4. Scrapped / certificate of destruction (only when true)

@@ -20,7 +20,7 @@ export function renderKeeperHistory(payload: ReportPayload): string {
     .join('');
 
   return `
-    <section class="section">
+    <section class="section section--compact">
       <!-- The section-lead (heading + warning banner) is kept together and
            glued to at least the first table row via break-after: avoid on the
            section title. The table body is allowed to flow across pages so

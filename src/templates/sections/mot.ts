@@ -2,6 +2,7 @@ import { MotTest, ReportPayload } from '../../types/report';
 import { esc, fmtDate, fmtMileage, fmtNumber, parseDate } from '../helpers';
 import { renderMileageChart } from './mileageChart';
 import { detectMileageDiscrepancy } from '../insights';
+import { renderTileTable } from '../tileGrid';
 
 function advisoryTag(type: string | undefined): string {
   const t = (type || '').toUpperCase();
@@ -29,27 +30,35 @@ function renderTest(test: MotTest, index: number): string {
     )
     .join('');
 
+  const head = `
+    <div class="mot-head">
+      <div class="left">
+        <strong>${esc(fmtDate(test.test_date))}</strong>
+        ${badge}
+        <span class="text-muted small">Mileage</span>
+        <span class="badge info">${esc(fmtMileage(test.odometer ?? null, test.odometer_unit))}</span>
+        ${
+          test.expiry_date
+            ? `<span class="text-muted small">Expires</span> <span class="badge">${esc(fmtDate(test.expiry_date))}</span>`
+            : ''
+        }
+      </div>
+      <div class="text-muted small">Test #${esc(index + 1)}</div>
+    </div>`;
+
+  // Pass/fail tests with no advisories use a tighter single-line card so a
+  // long MOT history doesn't cram half a dozen sections onto one page.
+  if (!advisories) {
+    return `
+    <div class="card mot-card mot-card--compact mt-2">
+      ${head}
+    </div>`;
+  }
+
   return `
     <div class="card mot-card mt-2">
-      <div class="mot-head">
-        <div class="left">
-          <strong>${esc(fmtDate(test.test_date))}</strong>
-          ${badge}
-          <span class="text-muted small">Mileage</span>
-          <span class="badge info">${esc(fmtMileage(test.odometer ?? null, test.odometer_unit))}</span>
-          ${
-            test.expiry_date
-              ? `<span class="text-muted small">Expires</span> <span class="badge">${esc(fmtDate(test.expiry_date))}</span>`
-              : ''
-          }
-        </div>
-        <div class="text-muted small">Test #${esc(index + 1)}</div>
-      </div>
-      ${
-        advisories
-          ? `<ul class="advisory-list">${advisories}</ul>`
-          : `<div class="text-muted small">No advisories recorded.</div>`
-      }
+      ${head}
+      <ul class="advisory-list">${advisories}</ul>
     </div>
   `;
 }
@@ -65,28 +74,28 @@ export function renderMotHistory(payload: ReportPayload): string {
   // Compact 4-tile summary strip (matches the .cost / .val tile rhythm) — keeps
   // the MOT lead-in short so it can land at the bottom of a page below the
   // mileage chart without forcing the whole section to a new page.
-  const summary = `
-    <div class="mot-summary">
-      <div class="mot-stat"><div class="label">Latest test</div><div class="value">${esc(fmtDate(mot.latest_test_date))}</div></div>
-      <div class="mot-stat"><div class="label">Next due</div><div class="value">${esc(fmtDate(mot.mot_due_date))}</div></div>
-      <div class="mot-stat"><div class="label">Tests on record</div><div class="value">${esc(tests.length)}</div></div>
-      <div class="mot-stat"><div class="label">Pass / Fail</div>
-        <div class="value mot-pf">
-          <span class="badge success">${esc(passCount)} pass</span>
-          <span class="badge danger">${esc(failCount)} fail</span>
-        </div>
-      </div>
-    </div>
-  `;
+  const summary = renderTileTable(
+    [[
+      `<div class="mot-stat"><div class="label">Latest test</div><div class="value">${esc(fmtDate(mot.latest_test_date))}</div></div>`,
+      `<div class="mot-stat"><div class="label">Next due</div><div class="value">${esc(fmtDate(mot.mot_due_date))}</div></div>`,
+      `<div class="mot-stat"><div class="label">Tests on record</div><div class="value">${esc(tests.length)}</div></div>`,
+      `<div class="mot-stat"><div class="label">Pass / Fail</div><div class="value mot-pf"><span class="badge success">${esc(passCount)} pass</span> <span class="badge danger">${esc(failCount)} fail</span></div></div>`,
+    ]],
+    {
+      tableClass: 'mot-table',
+      rowClass: 'mot-table-row',
+      cellClass: 'mot-cell',
+      columns: 4,
+      wrapperClass: 'mot-summary-block',
+    },
+  );
 
   const list = tests.map((t, i) => renderTest(t, i)).join('');
 
   return `
-    <section class="section">
-      <div class="section-lead">
-        <div class="section-title"><span class="icon">✓</span> MOT History</div>
-        ${summary}
-      </div>
+    <section class="section section--compact">
+      <div class="section-title"><span class="icon">✓</span> MOT History</div>
+      ${summary}
       ${list || `<div class="text-muted small mt-2">No MOT tests recorded.</div>`}
     </section>
   `;
@@ -156,7 +165,7 @@ export function renderMileageTrend(payload: ReportPayload): string {
   return `
     <section class="section">
       <div class="section-title"><span class="icon">↗</span> Mileage Progression</div>
-      <div class="card">
+      <div class="card keep-together mt-2">
         ${renderMileageChart(trend)}
         <div class="text-muted small mt-2">${summary}</div>
       </div>

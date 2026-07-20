@@ -2,6 +2,34 @@ import { ReportPayload, WriteoffRecord } from '../../types/report';
 import { esc, fmtDate } from '../helpers';
 import { renderDamageDiagram } from './damageDiagram';
 
+/**
+ * Valid ABI/DVLA write-off category codes. A record without one of these
+ * codes AND without a "write-off"/"total loss"/"damage" cue in its status
+ * string is NOT a real insurance write-off — it might be a stolen/theft
+ * record that the feed lumped in here. We separate those so the report
+ * never advises "category check" for a stolen record.
+ */
+const VALID_WRITEOFF_CATEGORIES = new Set(['A', 'B', 'C', 'D', 'N', 'S']);
+const WRITEOFF_STATUS_CUES = ['write-off', 'writeoff', 'total loss', 'damage'];
+
+/**
+ * Filter out records that don't look like real write-offs.
+ * Exported so `insights.ts` uses the exact same rule when it decides
+ * whether to emit the "N write-off records found" observation.
+ */
+export function realWriteoffRecords(records: WriteoffRecord[] | undefined | null): WriteoffRecord[] {
+  return (records || []).filter((r) => {
+    const cat = (r.category || '').trim().toUpperCase();
+    if (cat && VALID_WRITEOFF_CATEGORIES.has(cat)) return true;
+    const status = (r.status || '').toLowerCase();
+    if (WRITEOFF_STATUS_CUES.some((cue) => status.includes(cue))) return true;
+    // Records without a category, no matching status cue, and no damage areas
+    // are treated as non-write-off data (e.g. a theft record mis-classified
+    // by the feed). We do NOT count them here.
+    return false;
+  });
+}
+
 function categoryBadge(category: string | undefined): string {
   const c = (category || '').toUpperCase().trim();
   const map: Record<string, { label: string; cls: string }> = {
@@ -38,10 +66,6 @@ function renderRecord(r: WriteoffRecord, index: number): string {
             Record #${esc(index + 1)} · Loss date: <strong>${esc(fmtDate(r.loss_date))}</strong>
           </div>
         </div>
-        <!-- 4-column kv so each visual row holds two key/value pairs. This halves
-             the card height vs. a single-column listing without sacrificing
-             readability — the labels stay left-aligned, the values right-aligned
-             within their column pair. -->
         <div class="kv" style="grid-template-columns: auto 1fr auto 1fr; gap: 2px 16px;">
           <div class="row"><div class="k">Cause of damage</div><div class="v">${esc(r.cause_of_damage)}</div></div>
           <div class="row"><div class="k">Theft indicator</div><div class="v">${esc(r.theft_indicator)}</div></div>
@@ -67,27 +91,66 @@ function renderRecord(r: WriteoffRecord, index: number): string {
   `;
 }
 
+/**
+ * Write-off & scrap status section.
+ *
+ * Three independent facts, always rendered as their OWN banner so they can
+ * never be conflated:
+ *
+ *   • Insurance write-off — filtered to records with a real CAT code or
+ *     status cue. Stolen-only entries from the feed do not appear here.
+ *   • Scrap marker
+ *   • Certificate of Destruction
+ */
 export function renderWriteoffSection(payload: ReportPayload): string {
-  const records = payload.report_data?.writeoff?.records || [];
-  if (!records.length) return '';
+  const records = realWriteoffRecords(payload.report_data?.writeoff?.records);
+  const history = payload.report_data?.history;
+  const scrapped = !!history?.is_scrapped;
+  const cod = !!history?.certificate_of_destruction;
+  const hasScrapMarker = scrapped || cod;
 
-  // Section heading + status banner are wrapped in section-lead so the heading
-  // cannot end up alone at the bottom of a page (matches the page-break fix
-  // already in place for Keeper History).
+  // Nothing to say → hide the section entirely.
+  if (!records.length && !hasScrapMarker) return '';
+
+  const writeoffBanner = records.length
+    ? `<div class="status-banner fail" style="margin-top:0; margin-bottom:8px;">
+        <span class="dot"></span>
+        <span><strong>This vehicle is recorded as an insurance write-off.</strong>&nbsp;
+          Each record below is paired with a diagram showing its specific damage area.</span>
+      </div>`
+    : `<div class="status-banner ok" style="margin-top:0; margin-bottom:8px;">
+        <span class="dot"></span>
+        <span><strong>No insurance write-off record found.</strong></span>
+      </div>`;
+
+  const scrapLabel = cod && scrapped
+    ? 'Certificate of Destruction / scrapped marker detected'
+    : cod
+      ? 'Certificate of Destruction issued'
+      : 'Scrapped marker detected';
+  const scrapBanner = hasScrapMarker
+    ? `<div class="status-banner fail" style="margin-top:0; margin-bottom:8px;">
+        <span class="dot"></span>
+        <span><strong>${esc(scrapLabel)} — do not purchase.</strong>&nbsp;
+          The DVLA lists this vehicle as scrapped and/or has issued a Certificate of Destruction.</span>
+      </div>`
+    : '';
+
+  const headingCount = records.length ? ` (${esc(records.length)})` : '';
+
   return `
-    <section class="section">
+    <section class="section section--compact">
       <div class="section-lead">
-        <div class="section-title"><span class="icon">⚠</span> Write-off Records (${esc(records.length)})</div>
-        <div class="status-banner fail" style="margin-top:0; margin-bottom:8px;">
-          <span class="dot"></span>
-          <span><strong>This vehicle is recorded as an insurance write-off.</strong>&nbsp;
-            Each record below is paired with a diagram showing its specific damage area.</span>
-        </div>
+        <div class="section-title"><span class="icon">⚠</span> Write-off &amp; Scrap Status${headingCount}</div>
+        ${writeoffBanner}
+        ${scrapBanner}
       </div>
 
-      <div class="writeoff-list">
-        ${records.map((r, i) => renderRecord(r, i)).join('')}
-      </div>
+      ${
+        records.length
+          ? `<div class="writeoff-list">${records.map((r, i) => renderRecord(r, i)).join('')}</div>`
+          : ''
+      }
     </section>
   `;
 }

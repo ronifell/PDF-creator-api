@@ -21,6 +21,8 @@ export const reportStyles = /* css */ `
   --destructive: #C72929;
   --destructive-fg: #FFFFFF;
   --border: #D1D4DC;
+  --border-strong: #A8B2C0;
+  --surface-muted: #DDE4EC;
   --ring: #2C5C8C;
   --success: #2F7F33;
 
@@ -71,7 +73,15 @@ small, .small { font-size: 8.5pt; color: var(--muted-fg); }
 /* All section spacing is driven by these two values, kept large enough that
    adjacent sections never visually collide but small enough that the report
    still flows tightly and fills each page. */
-.section { margin-top: 14px; }
+.section { margin-top: 12px; }
+.section.section--compact { margin-top: 9px; }
+.section.section--compact .section-title { margin-bottom: 6px; padding-bottom: 4px; }
+/* Keep the whole section on the next page when only a sliver of space
+   remains — prevents blocks like Risk Checks from stranding at a page bottom. */
+.section--fit-page {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
 .section-title {
   display: flex;
   align-items: center;
@@ -102,7 +112,17 @@ small, .small { font-size: 8.5pt; color: var(--muted-fg); }
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 12px 15px;
+  break-inside: auto;
+  page-break-inside: auto;
+}
+.card.keep-together,
+.card.card--keep {
   break-inside: avoid;
+  page-break-inside: avoid;
+}
+.card.card--flow {
+  break-inside: auto;
+  page-break-inside: auto;
 }
 .card + .card { margin-top: 9px; }
 .grid { display: grid; gap: 8px; }
@@ -255,6 +275,9 @@ tbody tr:last-child td { border-bottom: none; }
 }
 .cover .hero-stat .label { font-size: 7.5pt; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.06em; }
 .cover .hero-stat .value { font-size: 11pt; font-weight: 700; margin-top: 1px; }
+/* Softer weight/size for hero stats that fall back to a "…unavailable"
+   phrase — signals that this is a missing-data notice rather than a value. */
+.cover .hero-stat .value.unavailable { font-size: 9.5pt; font-weight: 600; opacity: 0.8; }
 
 /* Page-break helper — forces the next section onto a new printed page.
    Used to keep the cover/findings/observations together on page 1 and let
@@ -291,13 +314,6 @@ tbody tr:last-child td { border-bottom: none; }
   object-fit: scale-down;
   object-position: center center;
 }
-.vehicle-image-block .vehicle-image-fallback {
-  display: none;
-  flex-direction: column; align-items: center; gap: 6px;
-  text-align: center;
-}
-/* When <img> errors and class image-missing is added, swap to the fallback */
-.vehicle-image-block.image-missing .vehicle-image-fallback { display: flex; }
 
 /* UK number plate */
 .plate {
@@ -320,15 +336,32 @@ tbody tr:last-child td { border-bottom: none; }
    than ordinary cards because they are the visual anchor of page 1, where
    the vehicle photo no longer sits. The extra space helps the tile grid
    fill the gap below the cover without feeling sparse. */
-.findings-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+.findings-grid-block {
+  /* Row-level break rules live on .findings-table-row — do not lock the
+     whole findings grid onto one page (that left page 1 half empty). */
 }
+.findings-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+.findings-table-row {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+.findings-cell {
+  vertical-align: top;
+  width: 25%;
+  padding: 6px;
+}
+.findings-cell--empty { padding: 0; }
 .finding {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--card);
   padding: 13px 15px;
-  break-inside: avoid;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
   border-left-width: 4px;
 }
 .finding.ok   { border-left-color: var(--success); }
@@ -372,31 +405,70 @@ tbody tr:last-child td { border-bottom: none; }
 
 /* ---------- Status banner ---------- */
 .status-banner {
-  display: flex; align-items: center; gap: 12px;
+  display: flex; align-items: flex-start; gap: 12px;
   padding: 11px 14px;
   border-radius: var(--radius);
   margin-top: 10px;
   font-size: 10pt;
+  line-height: 1.45;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
-.status-banner .dot { width: 10px; height: 10px; border-radius: 999px; }
+.status-banner .dot { width: 10px; height: 10px; border-radius: 999px; flex-shrink: 0; margin-top: 3px; }
 .status-banner.ok   { background: #E8F4E9; color: #1E5A22; border: 1px solid #BFDFC2; }
 .status-banner.ok .dot   { background: var(--success); }
 .status-banner.warn { background: #FFF6DA; color: #6B4F00; border: 1px solid #F2DA92; }
 .status-banner.warn .dot { background: var(--accent); }
 .status-banner.fail { background: #FBE6E6; color: #7E1B1B; border: 1px solid #EFB6B6; }
 .status-banner.fail .dot { background: var(--destructive); }
+/* Strongest tone reserved for stolen / scrapped / Certificate of
+   Destruction. Deep solid red on the border and pill dot so the buyer
+   can't miss it, even skimming past a page of amber warnings. */
+.status-banner.critical {
+  background: var(--destructive);
+  color: #FFFFFF;
+  border: 2px solid #7E1B1B;
+  padding: 14px 18px 16px;
+  font-size: 11pt;
+  box-shadow: 0 2px 4px rgba(199, 41, 41, 0.25);
+}
+.status-banner.critical .dot {
+  background: #FFFFFF;
+  width: 12px; height: 12px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4);
+}
+.status-banner.critical strong { color: #FFFFFF; letter-spacing: 0.02em; text-transform: uppercase; }
+.status-banner.critical .status-banner-sub {
+  margin-top: 3px;
+  font-size: 9.5pt;
+  font-weight: 500;
+  color: #FFE9E9;
+}
 
-/* ---------- Risk check grid ----------
-   Compact tiles so Risk Checks + Vehicle Overview fit on page 2 below
-   the hero photo without forcing a page break between them. */
-.risk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+/* ---------- Risk check grid ---------- */
+.risk-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+.risk-table-row {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+.risk-cell {
+  vertical-align: top;
+  width: 33.33%;
+  padding: 3px;
+}
+.risk-cell--empty { padding: 0; }
 .risk {
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 6px 8px;
   background: var(--card);
   display: flex; align-items: center; gap: 7px;
-  break-inside: avoid;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
 }
 .risk .pill {
   width: 22px; height: 22px;
@@ -413,13 +485,44 @@ tbody tr:last-child td { border-bottom: none; }
 .section--tight { margin-top: 8px; }
 .section--tight .section-title { margin-bottom: 6px; padding-bottom: 4px; }
 
-/* ---------- Valuation tile grid ---------- */
-.val-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+/* ---------- Valuation tile grid ----------
+   Print-safe table layout — CSS grid fragments across pages in Chromium
+   PDF (row labels on page N, values on page N+1). Each <tr> and the
+   outer wrapper use break-inside:avoid so rows stay atomic. */
+.val-grid-block,
+.tile-grid-block,
+.cost-grid-block,
+.risk-grid-block,
+.mot-summary-block {
+  /* Outer wrapper is allowed to split across pages; atomicity is enforced
+     per table row via .val-table-row / .mot-table-row etc. */
+}
+.val-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+.val-table-row {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+.val-cell {
+  vertical-align: top;
+  width: 25%;
+  padding: 5px;
+}
+.val-cell--empty {
+  padding: 0;
+  border: none;
+}
 .val {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 11px 13px;
-  background: linear-gradient(180deg, #FFFFFF, #FAFBFD);
+  background: #FAFBFD;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
 }
 .val .label { font-size: 8.25pt; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.05em; }
 .val .value { font-size: 13pt; font-weight: 800; color: var(--primary); margin-top: 3px; }
@@ -428,23 +531,28 @@ tbody tr:last-child td { border-bottom: none; }
 .val.feature .value { color: #fff; font-size: 15pt; }
 
 /* ---------- MOT ---------- */
-/* Compact 4-tile lead-in strip that sits directly under the MOT History
-   heading. Same visual rhythm as .cost and .val tiles. Kept short so the
-   whole heading + summary block can squeeze in at the bottom of a page
-   that still has room for it. Slightly taller tiles + card spacing push
-   Keeper History to start on its own page after the last MOT test. */
-.mot-summary {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  break-inside: avoid;
-  page-break-inside: avoid;
+.mot-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
 }
+.mot-table-row {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+.mot-cell {
+  vertical-align: top;
+  width: 25%;
+  padding: 5px;
+}
+.mot-cell--empty { padding: 0; }
 .mot-stat {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--card);
   padding: 11px 13px;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
 }
 .mot-stat .label {
   font-size: 8pt; color: var(--muted-fg);
@@ -464,6 +572,13 @@ tbody tr:last-child td { border-bottom: none; }
   page-break-inside: auto;
   margin-top: 13px;
   padding: 14px 16px;
+}
+.mot-card--compact {
+  padding: 10px 14px;
+  margin-top: 8px;
+}
+.mot-card--compact .mot-head {
+  margin-bottom: 0;
 }
 .mot-head {
   display: flex; align-items: center; justify-content: space-between;
@@ -500,13 +615,32 @@ tbody tr:last-child td { border-bottom: none; }
 .tag.FAIL      { background: var(--destructive); color: #fff; }
 
 /* ---------- Running Costs ---------- */
-.cost-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.cost-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+.cost-table-row {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+.cost-cell {
+  vertical-align: top;
+  width: 33.33%;
+  padding: 5px;
+}
+.cost-cell--empty { padding: 0; }
+/* Stretch each .cost box to the full cell height so all tiles in a row
+   share the same height regardless of content length. */
+.cost-table-row .cost-cell { height: 1px; }
+.cost-table-row .cost-cell .cost { height: 100%; box-sizing: border-box; }
 .cost {
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: linear-gradient(180deg, #FFFFFF, #FAFBFD);
+  background: #FAFBFD;
   padding: 11px 13px;
-  break-inside: avoid;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
 }
 .cost .label { font-size: 8.5pt; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.05em; }
 .cost .value { font-size: 13.5pt; font-weight: 800; color: var(--primary); margin-top: 4px; line-height: 1.1; }
@@ -650,12 +784,16 @@ tbody tr:last-child td { border-bottom: none; }
 }
 .damage-diagram-caption { text-align: center; margin-top: 4px; }
 
-/* "Lead" group: section title + banner that must stay together.
-   Combined with break-after:avoid on .section-title this guarantees the
-   heading is never the last thing on a page. */
+/* "Lead" group: keep the section title with at least one content row.
+   Do NOT treat the entire lead block (title + banners + summary grids) as
+   atomic — that was leaving large blank gaps at page bottoms. */
 .section-lead {
-  break-inside: avoid;
-  page-break-inside: avoid;
+  break-inside: auto;
+  page-break-inside: auto;
+}
+.section-lead .section-title {
+  break-after: avoid;
+  page-break-after: avoid;
 }
 
 /* Tables: keep the header row with at least the first body row. */
@@ -678,35 +816,204 @@ tbody tr { break-inside: avoid; page-break-inside: avoid; }
   break-after: avoid-page;
   page-break-after: avoid;
 }
+/* Equipment section title must be allowed to sit above a partial page of
+   cards — avoid-page here was pushing the whole Manufacturer Options block
+   onto the next page and leaving valuation pages half empty. */
+.section-title.section-title--flow {
+  break-after: auto;
+  page-break-after: auto;
+}
+
+/* ---------- Plate history ----------
+   Compact block sitting between Keeper History and Valuation. The single
+   "Cherished transfer" row uses the same badge rhythm as the risk-check
+   tiles; when previous plates are recorded, they're rendered in a small
+   table below using .plate.sm badges so each historical VRM is instantly
+   recognisable as a number plate. */
+.plate-history {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 13px;
+  background: var(--card);
+  break-inside: auto;
+  page-break-inside: auto;
+}
+.plate-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+}
+.plate-row-label {
+  font-size: 9pt; color: var(--muted-fg);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.plate-row-value { display: inline-flex; align-items: center; gap: 8px; }
 
 /* ---------- Equipment ---------- */
-/* 2-column CSS Grid with stretch alignment so paired left/right category
-   cards share the same row height. Wider columns mean fewer items wrap to
-   a second line, keeping the section tall enough to read comfortably but
-   short enough that the whole equipment list + disclaimer fit on one page. */
+/* Manufacturer Options Reference:
+   - equip-note: quiet disclaimer strip explaining the data provenance (the
+     list is possible options for the trim, not confirmed-fitted).
+   - equip-group: heading strip for Standard vs. Optional so the two lists
+     read as sibling sub-sections rather than one blended grid. */
+.equip-note {
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: #FFFDF3;
+  color: #6B4F00;
+  font-size: 8.5pt;
+  line-height: 1.4;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.equip-group + .equip-group {
+  margin-top: 12px;
+}
+.equip-group-title {
+  font-size: 10pt;
+  color: var(--primary);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-bottom: 6px;
+  padding-bottom: 3px;
+  border-bottom: 1px dashed var(--border);
+  /* Avoid break-after:avoid here — pairing it with tall first rows makes
+     Chromium push the whole Optional block to the next page and leave an
+     empty band under Standard equipment. */
+}
+.equip-group-count { color: var(--muted-fg); font-weight: 500; font-size: 9pt; }
+/* 2-column rows — each .equip-grid-row is an explicit left/right pair so
+   Chromium keeps both cards at equal height even when the grid breaks across
+   printed pages (auto-placed CSS grid loses row pairing in PDF output). */
 .equip-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  align-items: stretch;
+  display: block;
+}
+.equip-row-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  border-spacing: 0;
+  margin-bottom: 0;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+.equip-row-table:last-child {
+  margin-bottom: 0;
+}
+.equip-row-table tr.equip-grid-row {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+.equip-cell {
+  width: 50%;
+  vertical-align: top;
+  padding: 5px;
+  border: none;
+  background: transparent;
+  box-sizing: border-box;
+}
+.equip-cell-card {
+  height: 100%;
+  padding: 12px 15px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-sizing: border-box;
+}
+.equip-row-table--solo .equip-cell {
+  width: 100%;
+}
+.equip-cell .equip-cat {
+  border: none;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  height: auto;
+  min-height: 0;
+}
+/* Legacy div-based rows (if any remain) */
+.equip-grid-row {
+  display: table;
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  margin-bottom: 0;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+.equip-grid-row:last-child {
+  margin-bottom: 0;
+}
+.equip-grid-row > .equip-cat {
+  display: table-cell;
+  width: 50%;
+  vertical-align: top;
+}
+.equip-grid-row--solo {
+  display: block;
+}
+.equip-grid-row--solo > .equip-cat {
+  display: block;
+  width: 100%;
 }
 .equip-cat {
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   background: var(--card);
   padding: 12px 15px;
   break-inside: avoid;
   page-break-inside: avoid;
-}
+  box-sizing: border-box;
+  /* Do NOT set display:flex here — it overrides table-cell on paired rows
+     and reintroduces the sawtooth height mismatch. */
 .equip-cat h4 {
   font-size: 9.75pt;
   color: var(--primary);
-  margin-bottom: 6px;
+  margin-bottom: 0;
   display: flex; align-items: center; gap: 6px;
 }
-.equip-cat ul {
+.equip-cat-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed var(--border);
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.equip-ref-chip {
+  font-size: 7pt;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #8A6500;
+  background: #FFF6DA;
+  border: 1px solid #F2DA92;
+  border-radius: 999px;
+  padding: 1px 8px;
+  white-space: nowrap;
+}
+.equip-cat ul,
+.equip-list {
   margin: 0; padding: 0; list-style: none;
   display: flex; flex-direction: column; gap: 2px;
+}
+.equip-list--cols {
+  display: block;
+  column-count: 2;
+  column-gap: 14px;
+}
+.equip-list--cols li {
+  break-inside: avoid;
+  page-break-inside: avoid;
+  -webkit-column-break-inside: avoid;
 }
 .equip-cat li {
   font-size: 8.75pt;
@@ -724,23 +1031,40 @@ tbody tr { break-inside: avoid; page-break-inside: avoid; }
 .equip-cat .desc { color: var(--muted-fg); }
 
 /* ---------- Disclaimer footer-strip ----------
-   A compact, low-emphasis legal notice that sits at the bottom of the
-   equipment page. Rendered as a thin bordered block of muted text rather
-   than a full card so it's small enough to share the page with the
-   equipment grid. */
+   Legal notice rendered as a bordered, muted box after the equipment grid.
+   printPagination.ts moves the whole block to the next page when it would
+   otherwise straddle a page break. */
 .disclaimer-strip {
-  margin-top: 12px;
-  padding: 9px 13px;
-  border: 1px solid var(--border);
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius);
-  background: var(--secondary);
+  background: var(--surface-muted);
   color: var(--muted-fg);
   font-size: 8pt;
-  line-height: 1.4;
+  line-height: 1.45;
+  /* Prevent Chromium from rendering this as a multi-page "fragment"
+     without the full box chrome (border/background). */
+  display: inline-block;
+  width: 100%;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+  -webkit-column-break-inside: avoid;
+  box-sizing: border-box;
+}
+.disclaimer-strip__title {
+  font-size: 9pt;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 6px;
   break-inside: avoid;
   page-break-inside: avoid;
 }
-.disclaimer-strip strong { color: var(--primary); }
+.disclaimer-strip__body {
+  margin: 0;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
 
 /* ---------- Utilities ---------- */
 .row-between { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -755,6 +1079,7 @@ tbody tr { break-inside: avoid; page-break-inside: avoid; }
 .text-right { text-align: right; }
 .text-muted { color: var(--muted-fg); }
 .no-break { break-inside: avoid; page-break-inside: avoid; }
+.keep-together { break-inside: avoid; page-break-inside: avoid; }
 .page-break { break-before: page; page-break-before: always; }
 hr.soft { border: none; border-top: 1px solid var(--border); margin: 8px 0; }
 

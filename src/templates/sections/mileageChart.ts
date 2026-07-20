@@ -33,17 +33,46 @@ export function renderMileageChart(trend: MileagePoint[] | undefined): string {
   const xSpan = Math.max(1, xMax - xMin);
 
   const mileages = points.map((p) => p.mileage);
-  const yMin = 0;
+  const yMinRaw = Math.min(...mileages);
   const yMaxRaw = Math.max(...mileages);
-  // Round up to a nice value
+  const span = yMaxRaw - yMinRaw;
+
+  // Choose a "nice" step relative to the *span* rather than the absolute
+  // maximum. A car that increased by 2,000 mi over a year would otherwise
+  // sit on a 0–75,000 scale and look completely flat — we now expand the
+  // slice so the slope is legible.
   const niceStep = (v: number) => {
+    if (v <= 200) return 50;
+    if (v <= 500) return 100;
+    if (v <= 1_000) return 250;
+    if (v <= 2_500) return 500;
+    if (v <= 5_000) return 1_000;
+    if (v <= 10_000) return 2_500;
     if (v <= 25_000) return 5_000;
     if (v <= 100_000) return 25_000;
     if (v <= 200_000) return 50_000;
     return 100_000;
   };
-  const step = niceStep(yMaxRaw);
-  const yMax = Math.ceil(yMaxRaw / step) * step;
+
+  // If the span is small compared to the values (e.g. 2,000 mi delta on a
+  // 60,000 mi odometer) start the axis just below the minimum so the trend
+  // is visible. If the span is a meaningful fraction of the max, keep the
+  // origin at zero — matches the "grow from 0" story most drivers expect.
+  const scaleFromZero = span >= yMaxRaw * 0.6;
+  let yMin: number;
+  let yMax: number;
+  let step: number;
+  if (scaleFromZero) {
+    step = niceStep(yMaxRaw);
+    yMin = 0;
+    yMax = Math.max(step, Math.ceil(yMaxRaw / step) * step);
+  } else {
+    const paddedSpan = Math.max(span, 1) * 1.5;
+    step = niceStep(paddedSpan);
+    yMin = Math.max(0, Math.floor((yMinRaw - paddedSpan * 0.15) / step) * step);
+    yMax = Math.ceil((yMaxRaw + paddedSpan * 0.15) / step) * step;
+    if (yMax === yMin) yMax = yMin + step;
+  }
 
   const xMap = (t: number) => padL + ((t - xMin) / xSpan) * plotW;
   const yMap = (m: number) => padT + (1 - (m - yMin) / (yMax - yMin)) * plotH;
@@ -62,9 +91,9 @@ export function renderMileageChart(trend: MileagePoint[] | undefined): string {
   // Area path under the line
   const areaPath = `${linePath} L ${mapped[mapped.length - 1].x.toFixed(1)} ${yMap(yMin).toFixed(1)} L ${mapped[0].x.toFixed(1)} ${yMap(yMin).toFixed(1)} Z`;
 
-  // Y gridlines at 0, step, 2*step, ... up to yMax
+  // Y gridlines at yMin, yMin+step, ... up to yMax
   const yTicks: number[] = [];
-  for (let v = 0; v <= yMax; v += step) yTicks.push(v);
+  for (let v = yMin; v <= yMax + 0.0001; v += step) yTicks.push(v);
 
   // X tick labels: pick first, last, and middle points for readability
   const xLabelIdx = (() => {
