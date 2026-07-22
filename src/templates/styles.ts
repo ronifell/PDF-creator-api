@@ -463,23 +463,40 @@ tbody tr:last-child td { border-bottom: none; }
 .risk-cell--empty { padding: 0; }
 .risk {
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 6px 8px;
+  border-radius: 8px;
+  padding: 7px 9px;
   background: var(--card);
-  display: flex; align-items: center; gap: 7px;
+  display: flex; align-items: center; gap: 8px;
   break-inside: avoid !important;
   page-break-inside: avoid !important;
 }
+.risk.ok {
+  background: #F4FAF5;
+  border-color: #C9E0CC;
+}
+.risk.warn {
+  background: #FFFBF0;
+  border-color: #F0DFA0;
+}
+.risk.fail {
+  background: #FDF5F5;
+  border-color: #EBC0C0;
+}
 .risk .pill {
   width: 22px; height: 22px;
-  border-radius: 6px;
+  border-radius: 999px;
   display: inline-flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 8pt;
   flex: 0 0 auto;
+  background: transparent;
 }
-.risk.ok   .pill { background: #E8F4E9; color: var(--success); }
-.risk.warn .pill { background: #FFF6DA; color: #8A6500; }
-.risk.fail .pill { background: #FBE6E6; color: var(--destructive); }
+.risk .pill .pill-svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+.risk.ok   .pill { color: var(--success); }
+.risk.warn .pill { color: #8A6500; }
+.risk.fail .pill { color: var(--destructive); }
 .risk .label { font-size: 7pt; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.2; }
 .risk .value { font-size: 9pt; font-weight: 600; color: var(--fg); margin-top: 1px; line-height: 1.2; }
 .section--tight { margin-top: 8px; }
@@ -825,11 +842,8 @@ tbody tr { break-inside: avoid; page-break-inside: avoid; }
 }
 
 /* ---------- Plate history ----------
-   Compact block sitting between Keeper History and Valuation. The single
-   "Cherished transfer" row uses the same badge rhythm as the risk-check
-   tiles; when previous plates are recorded, they're rendered in a small
-   table below using .plate.sm badges so each historical VRM is instantly
-   recognisable as a number plate. */
+   Compact cherished-transfer status row, then one card per previous plate
+   (mirrors the Motovo online "Previous Plate Changes" layout). */
 .plate-history {
   display: flex;
   flex-direction: column;
@@ -850,6 +864,53 @@ tbody tr { break-inside: avoid; page-break-inside: avoid; }
   text-transform: uppercase; letter-spacing: 0.05em;
 }
 .plate-row-value { display: inline-flex; align-items: center; gap: 8px; }
+
+.plate-change-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.plate-change-heading {
+  font-size: 10pt;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: 0.01em;
+}
+.plate-change-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--secondary);
+  padding: 10px 13px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.plate-change-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.plate-change-label {
+  font-size: 8pt;
+  font-weight: 600;
+  color: var(--muted-fg);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.plate-change-date {
+  margin-top: 6px;
+  font-size: 9pt;
+  color: var(--fg);
+}
+.plate-change-became {
+  margin-top: 6px;
+  font-size: 8.5pt;
+  color: var(--muted-fg);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
 
 /* ---------- Equipment ---------- */
 /* Manufacturer Options Reference:

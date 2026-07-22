@@ -37,14 +37,30 @@ function check(label: string, hit: boolean, hitLabel = 'Detected', okLabel = 'Cl
   };
 }
 
+/** Soft circular SVG status marks — cleaner than unicode ✓/✕ glyphs in print. */
 function pillFor(tone: RiskTone): string {
+  const common =
+    'viewBox="0 0 20 20" width="16" height="16" aria-hidden="true" focusable="false"';
   switch (tone) {
     case 'ok':
-      return '✓';
+      return `<svg class="pill-svg" ${common}>
+        <circle cx="10" cy="10" r="9" fill="currentColor" opacity="0.14"/>
+        <circle cx="10" cy="10" r="9" fill="none" stroke="currentColor" stroke-width="1.35"/>
+        <path d="M5.8 10.2l2.7 2.7 5.7-5.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>`;
     case 'warn':
-      return '!';
+      return `<svg class="pill-svg" ${common}>
+        <circle cx="10" cy="10" r="9" fill="currentColor" opacity="0.14"/>
+        <circle cx="10" cy="10" r="9" fill="none" stroke="currentColor" stroke-width="1.35"/>
+        <path d="M10 5.6v5.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        <circle cx="10" cy="14.1" r="0.95" fill="currentColor"/>
+      </svg>`;
     case 'fail':
-      return '✕';
+      return `<svg class="pill-svg" ${common}>
+        <circle cx="10" cy="10" r="9" fill="currentColor" opacity="0.14"/>
+        <circle cx="10" cy="10" r="9" fill="none" stroke="currentColor" stroke-width="1.35"/>
+        <path d="M6.8 6.8l6.4 6.4M13.2 6.8l-6.4 6.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      </svg>`;
   }
 }
 

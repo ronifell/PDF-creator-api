@@ -21,6 +21,12 @@ import { esc, fmtDate, parseDate } from '../helpers';
  * Anything else on a vehicle registered ≥ 2001 is treated as a private /
  * cherished plate ("likely" — we still print the DVLA answer verbatim
  * alongside the pattern-based warning).
+ *
+ * Display mirrors the Motovo online report: each real change is a card with
+ * the previous plate prominent and "Date of change" underneath. When the
+ * feed only supplies a legacy `vrm` (previous plate) with no `current_vrm`,
+ * we fall back to the vehicle's current registration so the row still makes
+ * sense.
  */
 type CherishedState = 'yes' | 'no' | 'likely' | 'unknown';
 
@@ -51,7 +57,9 @@ function realPlateChanges(changes: PlateChange[] | undefined | null): PlateChang
   return (changes || []).filter((p) => {
     const prev = (p.previous_vrm || p.vrm || '').trim();
     const curr = (p.current_vrm || '').trim();
-    return prev.length > 0 || curr.length > 0 || !!p.date;
+    // Date-only stubs (date set, both VRMs empty) are noise from the feed —
+    // don't treat them as real transfers.
+    return prev.length > 0 || curr.length > 0;
   });
 }
 
@@ -96,22 +104,66 @@ function summaryFor(state: CherishedState, hasPlates: boolean): string {
 
 interface PlateRow {
   changedOn: string;
-  from: string;
-  to: string;
+  /** Previous / outgoing plate — the one the online report highlights. */
+  previous: string;
+  /** Incoming / current plate after the change (may be inferred). */
+  current: string;
 }
 
-function toDisplayRows(changes: PlateChange[]): PlateRow[] {
+function toDisplayRows(changes: PlateChange[], currentVrm: string): PlateRow[] {
   // Sort by date ascending so the story reads chronologically (oldest first).
   const sorted = changes.slice().sort((a, b) => {
     const da = parseDate(a.date || '')?.getTime() ?? 0;
     const db = parseDate(b.date || '')?.getTime() ?? 0;
     return da - db;
   });
-  return sorted.map((p) => ({
-    changedOn: fmtDate(p.date || ''),
-    from: ((p.previous_vrm || p.vrm || '') as string).toUpperCase() || '—',
-    to: ((p.current_vrm || '') as string).toUpperCase() || '—',
-  }));
+  return sorted.map((p) => {
+    const previous = ((p.previous_vrm || p.vrm || '') as string).toUpperCase().trim();
+    let current = ((p.current_vrm || '') as string).toUpperCase().trim();
+    // Legacy feeds often only send the previous plate under `vrm`. Fill in the
+    // vehicle's current registration so the card still shows a coherent change.
+    if (!current && previous && currentVrm && previous !== currentVrm) {
+      current = currentVrm;
+    }
+    return {
+      changedOn: fmtDate(p.date || ''),
+      previous: previous || '—',
+      current: current || '—',
+    };
+  });
+}
+
+function renderChangeCards(rows: PlateRow[]): string {
+  if (!rows.length) return '';
+  const cards = rows
+    .map((r) => {
+      const dateLine = r.changedOn && r.changedOn !== '—'
+        ? `<div class="plate-change-date">Date of change: <strong>${esc(r.changedOn)}</strong></div>`
+        : '';
+      const became =
+        r.current && r.current !== '—' && r.current !== r.previous
+          ? `<div class="plate-change-became">Became <span class="plate sm">${esc(r.current)}</span></div>`
+          : '';
+      return `
+        <div class="plate-change-card">
+          <div class="plate-change-top">
+            <div class="plate-change-label">Plate change</div>
+            <span class="plate sm">${esc(r.previous)}</span>
+          </div>
+          ${dateLine}
+          ${became}
+        </div>`;
+    })
+    .join('');
+
+  return `
+    <div class="plate-change-list mt-2">
+      <div class="plate-change-heading">Previous plate changes</div>
+      ${cards}
+      <p class="small text-muted mt-1">
+        Plate change data sourced from DVLA via VDG. Indicates the vehicle previously held a different registration.
+      </p>
+    </div>`;
 }
 
 export function renderPlateHistory(payload: ReportPayload): string {
@@ -145,18 +197,7 @@ export function renderPlateHistory(payload: ReportPayload): string {
 
   const changes = realPlateChanges(history.plate_changes);
   const state = resolveCherished(history.cherished_transfer, changes.length > 0, vrmLooksCherished);
-  const displayRows = toDisplayRows(changes);
-
-  const tableBody = displayRows
-    .map(
-      (r) => `
-      <tr>
-        <td>${esc(r.changedOn)}</td>
-        <td><span class="plate sm">${esc(r.from)}</span></td>
-        <td><span class="plate sm">${esc(r.to)}</span></td>
-      </tr>`,
-    )
-    .join('');
+  const displayRows = toDisplayRows(changes, vrm);
 
   return `
     <section class="section section--compact">
@@ -170,22 +211,7 @@ export function renderPlateHistory(payload: ReportPayload): string {
         </div>
         <div class="text-muted small mt-1">${summaryFor(state, displayRows.length > 0)}</div>
       </div>
-      ${
-        displayRows.length
-          ? `<div class="table-wrap mt-2">
-              <table>
-                <thead>
-                  <tr>
-                    <th style="width:34%">Change date</th>
-                    <th>Previous plate</th>
-                    <th>New plate</th>
-                  </tr>
-                </thead>
-                <tbody>${tableBody}</tbody>
-              </table>
-            </div>`
-          : ''
-      }
+      ${renderChangeCards(displayRows)}
     </section>
   `;
 }
