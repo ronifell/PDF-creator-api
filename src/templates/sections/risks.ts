@@ -98,7 +98,8 @@ export function renderRiskChecks(payload: ReportPayload): string {
     (() => {
       const vrm = payload.registration_number || r?.registration_number || r?.vehicle?.vrm || '';
       const year = payload.year || r?.vehicle?.year || undefined;
-      const explicitYes = !!r?.history?.cherished_transfer;
+      const explicitYes = r?.history?.cherished_transfer === true;
+      const explicitNo = r?.history?.cherished_transfer === false;
       const hasPreviousPlates =
         !!r?.history?.plate_changes?.some((p) => {
           const prev = (p.previous_vrm || p.vrm || '').trim();
@@ -106,7 +107,15 @@ export function renderRiskChecks(payload: ReportPayload): string {
           return prev.length > 0 || curr.length > 0;
         });
       const patternHit = looksLikeCherishedVrm(vrm, year);
-      if (explicitYes || hasPreviousPlates) {
+      // Explicit feed flag wins. Plate history alone must not override a
+      // confirmed "No" (vehicle may have returned to its original plate).
+      if (explicitYes) {
+        return { label: 'Cherished plate transfer', value: 'Yes', tone: 'warn' as const };
+      }
+      if (explicitNo) {
+        return { label: 'Cherished plate transfer', value: 'No', tone: 'ok' as const };
+      }
+      if (hasPreviousPlates) {
         return { label: 'Cherished plate transfer', value: 'Yes', tone: 'warn' as const };
       }
       if (patternHit) {

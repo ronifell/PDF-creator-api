@@ -68,9 +68,13 @@ function resolveCherished(
   hasPlates: boolean,
   vrmLooksCherished: boolean,
 ): CherishedState {
-  if (flag === true || hasPlates) return 'yes';
-  if (vrmLooksCherished) return 'likely';
+  // Trust the explicit feed flag first. Plate history alone must NOT flip a
+  // confirmed "No" to "Yes" — vehicles can have plate_changes after returning
+  // to their original registration (see NU68XAA / had_cherished_transfer).
+  if (flag === true) return 'yes';
   if (flag === false) return 'no';
+  if (hasPlates) return 'yes';
+  if (vrmLooksCherished) return 'likely';
   return 'unknown';
 }
 
@@ -87,7 +91,11 @@ function badgeFor(state: CherishedState): string {
   }
 }
 
-function summaryFor(state: CherishedState, hasPlates: boolean): string {
+function summaryFor(
+  state: CherishedState,
+  hasPlates: boolean,
+  hadCherished: boolean,
+): string {
   switch (state) {
     case 'yes':
       return hasPlates
@@ -96,7 +104,9 @@ function summaryFor(state: CherishedState, hasPlates: boolean): string {
     case 'likely':
       return 'The current registration does not follow the standard UK age-identifier pattern for this vehicle, which suggests a personal/cherished plate. The data source did not return an explicit transfer record — verify manually via DVLA.';
     case 'no':
-      return 'The data source explicitly confirms no cherished transfer — this vehicle is on its original registration.';
+      return hadCherished
+        ? 'This vehicle previously held a cherished (personalised) registration but has since been transferred back to its original plate.'
+        : 'The data source explicitly confirms no cherished transfer — this vehicle is on its original registration.';
     case 'unknown':
       return 'No previous registration data returned by the data source — cherished-transfer status cannot be confirmed.';
   }
@@ -189,13 +199,14 @@ export function renderPlateHistory(payload: ReportPayload): string {
             <div class="plate-row-label">Cherished transfer</div>
             <div class="plate-row-value">${badgeFor(state)}</div>
           </div>
-          <div class="text-muted small mt-1">${summaryFor(state, false)}</div>
+          <div class="text-muted small mt-1">${summaryFor(state, false, false)}</div>
         </div>
       </section>
     `;
   }
 
   const changes = realPlateChanges(history.plate_changes);
+  const hadCherished = !!history.had_cherished_transfer;
   const state = resolveCherished(history.cherished_transfer, changes.length > 0, vrmLooksCherished);
   const displayRows = toDisplayRows(changes, vrm);
 
@@ -209,7 +220,7 @@ export function renderPlateHistory(payload: ReportPayload): string {
           <div class="plate-row-label">Cherished transfer</div>
           <div class="plate-row-value">${badgeFor(state)}</div>
         </div>
-        <div class="text-muted small mt-1">${summaryFor(state, displayRows.length > 0)}</div>
+        <div class="text-muted small mt-1">${summaryFor(state, displayRows.length > 0, hadCherished)}</div>
       </div>
       ${renderChangeCards(displayRows)}
     </section>

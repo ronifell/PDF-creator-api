@@ -72,7 +72,15 @@ export interface HistoryInfo {
   exported?: boolean;
   is_scrapped?: boolean;
   certificate_of_destruction?: boolean;
+  /** True when the vehicle currently holds a cherished / personalised plate. */
   cherished_transfer?: boolean;
+  /**
+   * True when the vehicle previously held a cherished plate but has since
+   * been transferred back to its original registration. Distinct from
+   * `cherished_transfer` — online Motovo shows Cherished Transfer: No in
+   * this case, with a note that a personalised plate was held in the past.
+   */
+  had_cherished_transfer?: boolean;
 }
 
 export interface PoliceInfo {

@@ -11,7 +11,7 @@ function advisoryTag(type: string | undefined): string {
   return `<span class="tag ${cls}">${esc(t || 'NOTE')}</span>`;
 }
 
-function renderTest(test: MotTest, index: number): string {
+function renderTest(test: MotTest, index: number, total: number): string {
   const passed = test.passed === true;
   const failed = test.passed === false;
   const badge = passed
@@ -43,7 +43,7 @@ function renderTest(test: MotTest, index: number): string {
             : ''
         }
       </div>
-      <div class="text-muted small">Test #${esc(index + 1)}</div>
+      <div class="text-muted small">Test #${esc(total - index)}</div>
     </div>`;
 
   // Pass/fail tests with no advisories use a tighter single-line card so a
@@ -90,7 +90,7 @@ export function renderMotHistory(payload: ReportPayload): string {
     },
   );
 
-  const list = tests.map((t, i) => renderTest(t, i)).join('');
+  const list = tests.map((t, i) => renderTest(t, i, tests.length)).join('');
 
   return `
     <section class="section section--compact">
