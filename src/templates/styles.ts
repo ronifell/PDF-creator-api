@@ -629,6 +629,13 @@ tbody tr:last-child td { border-bottom: none; }
 .section--tight { margin-top: 8px; }
 .section--tight .section-title { margin-bottom: 6px; padding-bottom: 4px; }
 
+/* Vehicle Overview cards share the same border/fill as Manufacturer Options
+   category boxes so adjacent sections read as one system. */
+.section--vehicle-overview .card {
+  border: 1px solid #C4CAD4;
+  background: var(--card);
+}
+
 /* ---------- Valuation tile grid ----------
    Print-safe table layout — CSS grid fragments across pages in Chromium
    PDF (row labels on page N, values on page N+1). Each <tr> and the
@@ -1107,7 +1114,7 @@ tbody tr { break-inside: avoid; page-break-inside: avoid; }
 .equip-cell-card {
   height: 100%;
   padding: 12px 15px;
-  border: 1px solid var(--border-strong);
+  border: 1px solid #C4CAD4;
   border-radius: var(--radius);
   background: var(--card);
   box-sizing: border-box;
@@ -1150,7 +1157,7 @@ tbody tr { break-inside: avoid; page-break-inside: avoid; }
   width: 100%;
 }
 .equip-cat {
-  border: 1px solid var(--border-strong);
+  border: 1px solid #C4CAD4;
   border-radius: var(--radius);
   background: var(--card);
   padding: 12px 15px;
@@ -1159,6 +1166,7 @@ tbody tr { break-inside: avoid; page-break-inside: avoid; }
   box-sizing: border-box;
   /* Do NOT set display:flex here — it overrides table-cell on paired rows
      and reintroduces the sawtooth height mismatch. */
+}
 .equip-cat h4 {
   font-size: 9.75pt;
   color: var(--primary);
@@ -1225,7 +1233,7 @@ tbody tr { break-inside: avoid; page-break-inside: avoid; }
 .disclaimer-strip {
   margin-top: 14px;
   padding: 14px 16px;
-  border: 1px solid var(--border-strong);
+  border: 1px solid #C4CAD4;
   border-radius: var(--radius);
   background: var(--surface-muted);
   color: var(--muted-fg);

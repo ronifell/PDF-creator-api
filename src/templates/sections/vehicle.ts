@@ -170,7 +170,7 @@ export function renderVehicleOverview(payload: ReportPayload): string {
   // page above. section-lead keeps the heading attached to at least the
   // first row of data.
   return `
-    <section class="section section--tight">
+    <section class="section section--tight section--vehicle-overview">
       <div class="section-lead">
         <div class="section-title"><span class="icon">▣</span> Vehicle Overview</div>
       </div>

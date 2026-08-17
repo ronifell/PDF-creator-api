@@ -104,7 +104,7 @@ export function renderReportHtml(payload: ReportPayload): string {
           ${renderEquipment(
             payload,
             /* html */ `
-              <div class="disclaimer-strip" style="margin-top:14px;padding:14px 16px;border:1px solid #A8B2C0;border-radius:10px;background:#DDE4EC;color:#6B7280;font-size:8pt;line-height:1.45;display:inline-block;width:100%;break-inside:avoid !important;page-break-inside:avoid !important;-webkit-column-break-inside:avoid;box-sizing:border-box;">
+              <div class="disclaimer-strip" style="margin-top:14px;padding:14px 16px;border:1px solid #C4CAD4;border-radius:10px;background:#DDE4EC;color:#6B7280;font-size:8pt;line-height:1.45;display:inline-block;width:100%;break-inside:avoid !important;page-break-inside:avoid !important;-webkit-column-break-inside:avoid;box-sizing:border-box;">
                 <div class="disclaimer-strip__title" style="font-size:9pt;font-weight:700;color:#163B5F;margin-bottom:6px;break-inside:avoid;page-break-inside:avoid;">
                   Disclaimer &amp; Data Sources
                 </div>
