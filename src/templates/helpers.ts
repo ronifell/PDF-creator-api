@@ -110,3 +110,50 @@ export function groupBy<T, K extends string | number>(items: T[], keyFn: (item: 
 export function normaliseArea(value: string | null | undefined): string {
   return (value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
+
+/**
+ * Current / latest registration for display (banner plate, etc.).
+ *
+ * Prefer the newest plate-change `current_vrm`, then `vehicle.vrm`, then the
+ * report lookup registration. Cherished transfers often leave
+ * `registration_number` as the plate used to request the report while
+ * `vehicle.vrm` / the latest transfer holds the plate on the car now.
+ */
+export function latestRegistration(payload: {
+  registration_number?: string | null;
+  report_data?: {
+    registration_number?: string | null;
+    vehicle?: { vrm?: string | null } | null;
+    history?: {
+      plate_changes?: Array<{
+        date?: string | null;
+        current_vrm?: string | null;
+        vrm?: string | null;
+      }> | null;
+    } | null;
+  } | null;
+}): string {
+  const changes = payload.report_data?.history?.plate_changes || [];
+  if (changes.length) {
+    const sorted = changes.slice().sort((a, b) => {
+      const da = parseDate(a.date || '')?.getTime() ?? 0;
+      const db = parseDate(b.date || '')?.getTime() ?? 0;
+      return db - da;
+    });
+    for (const c of sorted) {
+      const curr = (c.current_vrm || '').trim();
+      if (curr) return curr.toUpperCase();
+    }
+  }
+
+  const vehicleVrm = (payload.report_data?.vehicle?.vrm || '').trim();
+  if (vehicleVrm) return vehicleVrm.toUpperCase();
+
+  return (
+    payload.registration_number ||
+    payload.report_data?.registration_number ||
+    ''
+  )
+    .trim()
+    .toUpperCase();
+}

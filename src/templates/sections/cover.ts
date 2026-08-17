@@ -1,5 +1,5 @@
 import { ReportPayload, ReportStatus, VehicleInfo } from '../../types/report';
-import { esc, escAttr, fmtCurrency, fmtDate, fmtMileage, parseDate } from '../helpers';
+import { esc, escAttr, fmtCurrency, fmtDate, fmtMileage, latestRegistration, parseDate } from '../helpers';
 import { readAssetDataUrl } from '../assets';
 import { gatherObservations } from '../insights';
 import { realWriteoffRecords } from './writeoff';
@@ -269,7 +269,9 @@ interface CoverOptions {
 
 export function renderCover(payload: ReportPayload, opts: CoverOptions = {}): string {
   const v = payload.report_data?.vehicle || {};
-  const vrm = payload.registration_number || payload.report_data?.registration_number || v.vrm || '';
+  // Banner plate must show the plate currently on the vehicle (after any
+  // cherished transfer), not merely the registration used to look up the report.
+  const vrm = latestRegistration(payload);
   const make = payload.make || v.make || '';
   const model = payload.model || v.model || payload.derivative || '';
   const range = v.range || '';
