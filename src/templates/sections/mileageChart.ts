@@ -5,6 +5,50 @@ interface ChartDatum { date: Date; mileage: number; }
 interface ChartPoint extends ChartDatum { x: number; y: number; }
 
 /**
+ * Approximate rendered width of an "Apr 25"-style x-axis label at 9pt.
+ * Used as the minimum centre-to-centre gap before two labels collide.
+ */
+const X_LABEL_MIN_GAP_PX = 52;
+
+/**
+ * Pick x-axis label indices that stay readable.
+ *
+ * Always keeps the first and last points. Middle candidates are only kept
+ * when their plotted x is at least `minGap` away from both the previous
+ * kept label and the final label — this stops clustered readings (e.g. two
+ * MOT dates a few days apart) from stacking "Apr 25" on top of itself.
+ */
+function pickXLabelIndices(xs: number[], minGap: number): number[] {
+  const n = xs.length;
+  if (n === 0) return [];
+  if (n === 1) return [0];
+
+  const middles: number[] = [];
+  if (n <= 6) {
+    for (let i = 1; i < n - 1; i++) middles.push(i);
+  } else {
+    const step = Math.ceil(n / 6);
+    for (let i = step; i < n - 1; i += step) middles.push(i);
+  }
+
+  const selected: number[] = [0];
+  for (const i of middles) {
+    const prev = selected[selected.length - 1];
+    if (xs[i] - xs[prev] >= minGap && xs[n - 1] - xs[i] >= minGap) {
+      selected.push(i);
+    }
+  }
+  selected.push(n - 1);
+
+  // If the span itself is narrower than one label, first+last still collide.
+  // Drop the duplicate end label — one date is enough for a tiny window.
+  if (selected.length === 2 && xs[n - 1] - xs[0] < minGap) {
+    return [0];
+  }
+  return selected;
+}
+
+/**
  * Render an SVG line chart of mileage over time. Designed to fit alongside
  * the valuation/risk cards. Defensive against missing/null mileages.
  */
@@ -95,16 +139,10 @@ export function renderMileageChart(trend: MileagePoint[] | undefined): string {
   const yTicks: number[] = [];
   for (let v = yMin; v <= yMax + 0.0001; v += step) yTicks.push(v);
 
-  // X tick labels: pick first, last, and middle points for readability
-  const xLabelIdx = (() => {
-    const n = mapped.length;
-    if (n <= 6) return mapped.map((_, i) => i);
-    const out = new Set<number>();
-    out.add(0);
-    out.add(n - 1);
-    for (let i = 1; i < n - 1; i += Math.ceil(n / 6)) out.add(i);
-    return Array.from(out).sort((a, b) => a - b);
-  })();
+  const xLabelIdx = pickXLabelIndices(
+    mapped.map((p) => p.x),
+    X_LABEL_MIN_GAP_PX,
+  );
 
   return /* html */ `
     <svg class="mileage-chart" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-label="Mileage progression chart">
@@ -148,7 +186,7 @@ export function renderMileageChart(trend: MileagePoint[] | undefined): string {
         )
         .join('')}
 
-      <!-- X labels -->
+      <!-- X labels (collision-filtered so clustered dates stay readable) -->
       ${xLabelIdx
         .map((i) => {
           const p = mapped[i];
@@ -157,8 +195,19 @@ export function renderMileageChart(trend: MileagePoint[] | undefined): string {
             year: '2-digit',
             timeZone: 'UTC',
           });
-          return `<text x="${p.x.toFixed(1)}" y="${(H - padB + 18).toFixed(1)}"
-                        text-anchor="middle" font-family="Inter, Arial, sans-serif"
+          // Pin first/last labels to the plot edges so they don't clip when
+          // a point sits flush against padL / padR.
+          let anchor: 'start' | 'middle' | 'end' = 'middle';
+          let x = p.x;
+          if (i === 0) {
+            anchor = 'start';
+            x = Math.max(p.x, padL);
+          } else if (i === mapped.length - 1) {
+            anchor = 'end';
+            x = Math.min(p.x, W - padR);
+          }
+          return `<text x="${x.toFixed(1)}" y="${(H - padB + 18).toFixed(1)}"
+                        text-anchor="${anchor}" font-family="Inter, Arial, sans-serif"
                         font-size="9" fill="#6B7280">${esc(label)}</text>`;
         })
         .join('')}

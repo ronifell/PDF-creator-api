@@ -212,11 +212,11 @@ tbody tr:last-child td { border-bottom: none; }
 /* ---------- Cover (premium Motovo banner) ---------- */
 .cover {
   position: relative;
-  padding: 14px 16px 12px;
-  border-radius: var(--radius-lg);
+  padding: 18px 20px 14px;
+  border-radius: 16px;
   background:
-    radial-gradient(ellipse 55% 80% at 48% 60%, rgba(60, 110, 160, 0.35) 0%, transparent 70%),
-    linear-gradient(135deg, #0F2A45 0%, #163B5F 45%, #1A456E 100%);
+    radial-gradient(ellipse 70% 90% at 50% 45%, rgba(55, 105, 155, 0.42) 0%, transparent 68%),
+    linear-gradient(160deg, #0B2038 0%, #12324F 42%, #0E2740 100%);
   color: #FFFFFF;
   overflow: hidden;
   break-inside: avoid;
@@ -224,101 +224,112 @@ tbody tr:last-child td { border-bottom: none; }
 }
 .cover .cover-bar {
   display: flex; align-items: flex-start; justify-content: space-between;
-  gap: 12px;
+  gap: 14px;
   position: relative;
   z-index: 2;
 }
 .cover .brand {
-  display: inline-flex; align-items: center; gap: 10px;
+  display: inline-flex; align-items: center; gap: 11px;
 }
 .cover .brand .brand-logo {
-  width: 28px; height: 28px;
+  width: 32px; height: 32px;
   object-fit: contain;
   filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25));
 }
 .cover .brand .brand-text {
-  display: flex; flex-direction: column; line-height: 1;
+  display: flex; flex-direction: column; line-height: 1.05;
 }
 .cover .brand .brand-name {
-  font-weight: 800; font-size: 14pt; letter-spacing: -0.02em;
+  font-weight: 800; font-size: 15pt; letter-spacing: 0.02em;
 }
 .cover .brand .brand-sub {
-  opacity: 0.85; font-size: 8.5pt; margin-top: 3px;
+  opacity: 0.78; font-size: 8.5pt; margin-top: 4px; font-weight: 400;
 }
 .cover .plate-wrap {
-  display: flex; flex-direction: column; align-items: flex-end; gap: 3px;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
 }
 .cover .plate-label {
-  font-size: 7pt; opacity: 0.75; letter-spacing: 0.12em; text-transform: uppercase;
+  font-size: 7pt; opacity: 0.72; letter-spacing: 0.14em; text-transform: uppercase;
+  font-weight: 600;
 }
 
 .cover .cover-body {
   display: grid;
-  grid-template-columns: 1.15fr 1.2fr 1fr;
-  gap: 10px 14px;
+  grid-template-columns: 1.05fr 1.25fr 1.05fr;
+  gap: 12px 16px;
   align-items: center;
-  margin-top: 10px;
-  min-height: 148px;
+  margin-top: 14px;
+  min-height: 168px;
   position: relative;
   z-index: 1;
 }
 .cover .cover-body--no-image {
-  grid-template-columns: 1.35fr 1fr;
-  min-height: 118px;
+  grid-template-columns: 1.4fr 1fr;
+  min-height: 128px;
 }
 
 .cover .cover-identity {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 6px;
+  gap: 5px;
   min-width: 0;
-  padding-bottom: 4px;
+  padding-bottom: 2px;
 }
 .cover h1 {
   color: #FFFFFF;
-  font-size: 18pt;
-  line-height: 1.1;
-  letter-spacing: -0.01em;
+  font-size: 20pt;
+  line-height: 1.05;
+  letter-spacing: -0.015em;
   text-transform: uppercase;
+  font-weight: 800;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.cover h1 .cover-make,
+.cover h1 .cover-model {
+  display: block;
 }
 .cover .cover-trim {
-  font-size: 12pt;
+  font-size: 13.5pt;
   font-weight: 700;
   color: #6EB6E8;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
+  margin-top: 2px;
 }
 .cover .cover-quick-stats {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 6px;
-  font-size: 10pt;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 10.5pt;
   font-weight: 600;
-  opacity: 0.95;
+  color: rgba(255,255,255,0.95);
 }
 .cover .cover-quick {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
 }
 .cover .cover-quick.unavailable { opacity: 0.75; font-weight: 500; }
 .cover .cover-quick-sep {
   width: 1px;
-  height: 14px;
-  background: rgba(255,255,255,0.35);
+  height: 16px;
+  background: rgba(255,255,255,0.32);
 }
 .cover .cover-icon {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
-  opacity: 0.9;
+  opacity: 0.95;
+  color: #FFFFFF;
 }
 .cover .cover-identity .vin-row {
-  margin-top: 8px;
+  margin-top: 10px;
   display: inline-flex; align-items: center; gap: 6px;
   background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.16);
   border-radius: 6px;
   padding: 2px 8px;
   align-self: flex-start;
@@ -335,62 +346,67 @@ tbody tr:last-child td { border-bottom: none; }
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  height: 148px;
+  height: 168px;
   min-width: 0;
 }
 .cover .cover-vehicle-img {
   display: block;
   max-width: 100%;
-  max-height: 148px;
+  max-height: 168px;
   width: auto;
   height: auto;
   object-fit: contain;
   object-position: center bottom;
-  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35));
+  filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.4));
 }
 
 .cover .cover-specs {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 7px;
+  gap: 8px;
 }
 .cover .cover-spec {
   display: flex;
-  align-items: flex-start;
-  gap: 7px;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 8px;
-  padding: 8px 9px;
+  align-items: center;
+  gap: 11px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 10px;
+  padding: 12px 13px;
+  min-height: 62px;
 }
 .cover .cover-spec .cover-icon {
-  width: 15px;
-  height: 15px;
-  margin-top: 1px;
-  opacity: 0.85;
+  width: 26px;
+  height: 26px;
+  margin-top: 0;
+  opacity: 0.96;
+  color: #FFFFFF;
+  flex-shrink: 0;
 }
-.cover .cover-spec-text { min-width: 0; }
+.cover .cover-spec-text { min-width: 0; flex: 1; }
 .cover .cover-spec-label {
   font-size: 6.5pt;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  opacity: 0.7;
+  color: rgba(190, 210, 230, 0.85);
   line-height: 1.2;
+  font-weight: 600;
 }
 .cover .cover-spec-value {
-  font-size: 10pt;
+  font-size: 11pt;
   font-weight: 700;
-  margin-top: 1px;
+  margin-top: 2px;
   line-height: 1.2;
   word-break: break-word;
+  color: #FFFFFF;
 }
 
 .cover .cover-meta {
-  margin-top: 10px;
-  padding-top: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
   border-top: 1px solid rgba(255,255,255,0.12);
   font-size: 8pt;
-  opacity: 0.8;
+  color: rgba(200, 215, 230, 0.85);
   position: relative;
   z-index: 2;
 }
@@ -435,9 +451,9 @@ tbody tr:last-child td { border-bottom: none; }
   color: #111827;
   font-family: 'JetBrains Mono', 'Menlo', monospace;
   font-weight: 800;
-  letter-spacing: 0.08em;
-  font-size: 14pt;
-  padding: 4px 12px;
+  letter-spacing: 0.1em;
+  font-size: 15pt;
+  padding: 5px 14px;
   border-radius: 6px;
   border: 2px solid #111827;
   box-shadow: 0 1px 0 #00000022;

@@ -231,14 +231,18 @@ function engineSizeLabel(vehicle: VehicleInfo | undefined): string {
   return '—';
 }
 
-/** Inline SVG icons for the premium cover banner (print-safe). */
+/** Inline SVG icons for the premium cover banner (print-safe).
+ *  Modern outline style — thin stroke, rounded caps — sized via CSS. */
+const ICON_ATTRS =
+  'class="cover-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+
 const ICONS = {
-  calendar: `<svg class="cover-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 2h2v2h6V2h2v2h3a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3V2zm12 8H5v10h14V10zm-2 2v2h-2v-2h2zm-4 0v2h-2v-2h2zm-4 0v2H7v-2h2z"/></svg>`,
-  mileage: `<svg class="cover-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 1 0 18A9 9 0 0 1 12 3zm0 2a7 7 0 1 0 0 14A7 7 0 0 0 12 5zm.5 2v5.2l3.6 2.1-.9 1.5L11 12.5V7h1.5z"/></svg>`,
-  engine: `<svg class="cover-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 6h2v2h4V6h2v2h1a2 2 0 0 1 2 2v1h2v2h-2v1a2 2 0 0 1-2 2h-1v2h-2v-2H9v2H7v-2H6a2 2 0 0 1-2-2v-1H2v-2h2V10a2 2 0 0 1 2-2h1V6zm1 4v6h8v-2h2v-2h-2V10H8z"/></svg>`,
-  fuel: `<svg class="cover-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 3h10a1 1 0 0 1 1 1v14h2a2 2 0 0 0 2-2V9.8l-2-2V4h2v2.6l3 3V16a4 4 0 0 1-4 4h-2v1H3V4a1 1 0 0 1 1-1zm1 2v14h8V5H5zm2 2h4v4H7V7z"/></svg>`,
-  gearbox: `<svg class="cover-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 3h4v4h-1v3h3V8h4v4h-4v-1h-3v3h1.5a2.5 2.5 0 1 1 0 5H13v2h-2v-2H9.5a2.5 2.5 0 1 1 0-5H11v-3H8v1H4V8h4v2h3V7h-1V3z"/></svg>`,
-  colour: `<svg class="cover-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 0 1 9 9c0 3.5-2.5 6-5.5 6H14a2 2 0 0 0-2 2 1.5 1.5 0 1 1-1.5-1.5H12a9 9 0 0 1 0-15.5zm-5.5 7a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm3-3a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm5 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm3 3a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg>`,
+  calendar: `<svg ${ICON_ATTRS}><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17M8 3.5v3.5M16 3.5v3.5"/><path d="M8 13h2M12 13h2M16 13h.01M8 16.5h2M12 16.5h2"/></svg>`,
+  mileage: `<svg ${ICON_ATTRS}><circle cx="12" cy="13" r="8"/><path d="M12 13l4.2-4.2"/><path d="M8.2 18.2a7.2 7.2 0 0 1 7.6 0"/><circle cx="12" cy="13" r="1.4" fill="currentColor" stroke="none"/></svg>`,
+  engine: `<svg ${ICON_ATTRS}><path d="M7 8h2V6h4v2h2"/><path d="M6 10h10a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H9l-2 2H5v-2H4a1 1 0 0 1-1-1v-3a2 2 0 0 1 2-2h1z"/><path d="M18 12h2v3h-2"/><path d="M9 13.5h4"/></svg>`,
+  fuel: `<svg ${ICON_ATTRS}><rect x="3.5" y="3.5" width="10" height="17" rx="1.5"/><path d="M13.5 7h1.8l2.7 2.7V16a2 2 0 0 1-2 2h-.5"/><path d="M16.5 10.5V8.5"/><path d="M6.5 7.5h4v3.5h-4z"/></svg>`,
+  gearbox: `<svg ${ICON_ATTRS}><circle cx="6.5" cy="5.5" r="1.4"/><circle cx="12" cy="5.5" r="1.4"/><circle cx="17.5" cy="5.5" r="1.4"/><circle cx="6.5" cy="18.5" r="1.4"/><circle cx="12" cy="18.5" r="1.4"/><circle cx="17.5" cy="12" r="1.4"/><path d="M6.5 5.5v13M17.5 5.5v6.5M12 5.5v13M6.5 12h11"/></svg>`,
+  colour: `<svg ${ICON_ATTRS}><path d="M12 3a9 9 0 0 1 9 9c0 3.2-2.2 5.5-5 5.5h-1.2a1.8 1.8 0 0 0-1.8 1.8 1.7 1.7 0 1 1-1.7-1.7"/><circle cx="7.5" cy="11" r="1.15" fill="currentColor" stroke="none"/><circle cx="10.2" cy="7.8" r="1.15" fill="currentColor" stroke="none"/><circle cx="14.2" cy="7.8" r="1.15" fill="currentColor" stroke="none"/><circle cx="16.8" cy="11" r="1.15" fill="currentColor" stroke="none"/></svg>`,
 } as const;
 
 function observationsHtml(payload: ReportPayload): string {
@@ -276,9 +280,11 @@ export function renderCover(payload: ReportPayload, opts: CoverOptions = {}): st
   const brandSubtitle = opts.brandSubtitle || 'Dealer Vehicle History Report';
   const imageSrc = resolvedVehicleImage(payload);
 
-  // Headline prefers make + range (e.g. VAUXHALL CROSSLAND X); fall back to
-  // make + model when range is absent. Trim/variant sits on its own blue line.
-  const headlineCore = [make, range || model].filter(Boolean).join(' ').toUpperCase();
+  // Headline: make on its own line when we also have a range/model, matching
+  // the Motovo banner (VAUXHALL / CROSSLAND X). Trim sits on the blue line.
+  const makeLine = (make || '').trim().toUpperCase();
+  const modelLine = (range || model || '').trim().toUpperCase();
+  const headlineCore = [makeLine, modelLine].filter(Boolean).join(' ');
   const mileageText =
     payload.latest_mileage == null ? 'Unavailable' : fmtMileage(payload.latest_mileage);
 
@@ -313,6 +319,11 @@ export function renderCover(payload: ReportPayload, opts: CoverOptions = {}): st
   const imageHtml = imageSrc
     ? `<img class="cover-vehicle-img" src="${escAttr(imageSrc)}" alt="${escAttr(headlineCore)}" />`
     : '';
+
+  const headlineHtml =
+    makeLine && modelLine && makeLine !== modelLine
+      ? `<h1><span class="cover-make">${esc(makeLine)}</span><span class="cover-model">${esc(modelLine)}</span></h1>`
+      : `<h1>${esc(headlineCore || '—')}</h1>`;
 
   const specCards = [
     { icon: ICONS.engine, label: 'Engine Size', value: engineSizeLabel(v) },
@@ -350,7 +361,7 @@ export function renderCover(payload: ReportPayload, opts: CoverOptions = {}): st
 
       <div class="cover-body${imageSrc ? '' : ' cover-body--no-image'}">
         <div class="cover-identity">
-          <h1>${esc(headlineCore || '—')}</h1>
+          ${headlineHtml}
           ${trim ? `<div class="cover-trim">${esc(trim)}</div>` : ''}
           <div class="cover-quick-stats">
             ${year ? `<span class="cover-quick">${ICONS.calendar}<span>${esc(String(year))}</span></span>` : ''}
