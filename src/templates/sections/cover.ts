@@ -1,4 +1,4 @@
-import { ReportPayload, ReportStatus } from '../../types/report';
+import { ReportPayload, ReportStatus, VehicleInfo } from '../../types/report';
 import { esc, escAttr, fmtCurrency, fmtDate, fmtMileage, parseDate } from '../helpers';
 import { readAssetDataUrl } from '../assets';
 import { gatherObservations } from '../insights';
@@ -194,34 +194,52 @@ function findings(payload: ReportPayload): Finding[] {
   ];
 }
 
-function vehicleImageHtml(payload: ReportPayload, vrm: string, year: number | string, make: string, model: string): string {
+/** Resolved vehicle photo for the cover banner, or null when missing. */
+function resolvedVehicleImage(payload: ReportPayload): string | null {
   const src = payload.image_url || payload.report_data?.images?.primary;
-
-  // Only render the vehicle photo when we have a fully-resolved data URL.
-  // The imageResolver replaces the remote URL with a base64 data URL on
-  // successful fetch and CLEARS the field when the image is missing or looks
-  // like a UKVD placeholder. Per the client brief: "if no image is returned,
-  // just don't show a picture" — never a placeholder card.
-  //
-  // No image → omit the block entirely and do NOT force a page break.
-  // An empty section--page-break here was leaving page 1 half blank and
-  // pushing Risk Checks to page 2 even when there was room to continue.
-  if (!src || !src.startsWith('data:')) {
-    return '';
-  }
-
-  const label = `${year} ${make} ${model}`.trim();
-
-  return `<!-- Vehicle photo is intentionally pushed to page 2 (section--page-break)
-             so the cover, Key Findings and Key Observations on page 1 read as a
-             single composed summary spread. The photo then sits as a clean
-             header on page 2 above the Risk Checks Summary. -->
-          <section class="section section--page-break">
-            <div class="vehicle-image-block" data-vrm="${escAttr(vrm)}">
-              <img src="${escAttr(src)}" alt="${escAttr(`${label} stock photo`)}" />
-            </div>
-          </section>`;
+  // Only use a fully-resolved data URL. The imageResolver replaces remote
+  // URLs with base64 on success and CLEARS the field for missing/placeholder
+  // images. No image → blank banner slot (never a silhouette card).
+  if (!src || !src.startsWith('data:')) return null;
+  return src;
 }
+
+/** Format a UK VRM for display (e.g. NU68XAA → NU68 XAA). */
+function formatVrmDisplay(vrm: string): string {
+  const clean = vrm.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  if (/^[A-Z]{2}\d{2}[A-Z]{3}$/.test(clean)) {
+    return `${clean.slice(0, 4)} ${clean.slice(4)}`;
+  }
+  if (/^[A-Z]\d{1,3}[A-Z]{3}$/.test(clean)) {
+    const letters = clean.match(/[A-Z]{3}$/)?.[0] || '';
+    return `${clean.slice(0, clean.length - 3)} ${letters}`.trim();
+  }
+  if (/^[A-Z]{3}\d{1,3}[A-Z]$/.test(clean)) {
+    return `${clean.slice(0, 3)} ${clean.slice(3)}`;
+  }
+  return clean || vrm;
+}
+
+function engineSizeLabel(vehicle: VehicleInfo | undefined): string {
+  if (vehicle?.engine_size) return vehicle.engine_size;
+  if (vehicle?.engine_capacity_litres != null) {
+    return `${vehicle.engine_capacity_litres}L`;
+  }
+  if (vehicle?.engine_capacity_cc != null) {
+    return `${vehicle.engine_capacity_cc}cc`;
+  }
+  return '—';
+}
+
+/** Inline SVG icons for the premium cover banner (print-safe). */
+const ICONS = {
+  calendar: `<svg class="cover-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 2h2v2h6V2h2v2h3a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3V2zm12 8H5v10h14V10zm-2 2v2h-2v-2h2zm-4 0v2h-2v-2h2zm-4 0v2H7v-2h2z"/></svg>`,
+  mileage: `<svg class="cover-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 1 0 18A9 9 0 0 1 12 3zm0 2a7 7 0 1 0 0 14A7 7 0 0 0 12 5zm.5 2v5.2l3.6 2.1-.9 1.5L11 12.5V7h1.5z"/></svg>`,
+  engine: `<svg class="cover-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 6h2v2h4V6h2v2h1a2 2 0 0 1 2 2v1h2v2h-2v1a2 2 0 0 1-2 2h-1v2h-2v-2H9v2H7v-2H6a2 2 0 0 1-2-2v-1H2v-2h2V10a2 2 0 0 1 2-2h1V6zm1 4v6h8v-2h2v-2h-2V10H8z"/></svg>`,
+  fuel: `<svg class="cover-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 3h10a1 1 0 0 1 1 1v14h2a2 2 0 0 0 2-2V9.8l-2-2V4h2v2.6l3 3V16a4 4 0 0 1-4 4h-2v1H3V4a1 1 0 0 1 1-1zm1 2v14h8V5H5zm2 2h4v4H7V7z"/></svg>`,
+  gearbox: `<svg class="cover-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 3h4v4h-1v3h3V8h4v4h-4v-1h-3v3h1.5a2.5 2.5 0 1 1 0 5H13v2h-2v-2H9.5a2.5 2.5 0 1 1 0-5H11v-3H8v1H4V8h4v2h3V7h-1V3z"/></svg>`,
+  colour: `<svg class="cover-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 0 1 9 9c0 3.5-2.5 6-5.5 6H14a2 2 0 0 0-2 2 1.5 1.5 0 1 1-1.5-1.5H12a9 9 0 0 1 0-15.5zm-5.5 7a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm3-3a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm5 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm3 3a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg>`,
+} as const;
 
 function observationsHtml(payload: ReportPayload): string {
   const items = gatherObservations(payload);
@@ -250,11 +268,19 @@ export function renderCover(payload: ReportPayload, opts: CoverOptions = {}): st
   const vrm = payload.registration_number || payload.report_data?.registration_number || v.vrm || '';
   const make = payload.make || v.make || '';
   const model = payload.model || v.model || payload.derivative || '';
-  const derivative = payload.derivative || v.derivative || '';
+  const range = v.range || '';
+  const trim = (v.model_variant || '').trim();
   const year = payload.year || v.year || '';
   const status = payload.overall_status || payload.report_data?.overall_status;
   const generated = payload.generated_at || payload.created_date;
   const brandSubtitle = opts.brandSubtitle || 'Dealer Vehicle History Report';
+  const imageSrc = resolvedVehicleImage(payload);
+
+  // Headline prefers make + range (e.g. VAUXHALL CROSSLAND X); fall back to
+  // make + model when range is absent. Trim/variant sits on its own blue line.
+  const headlineCore = [make, range || model].filter(Boolean).join(' ').toUpperCase();
+  const mileageText =
+    payload.latest_mileage == null ? 'Unavailable' : fmtMileage(payload.latest_mileage);
 
   const issues: string[] = [];
   if (payload.has_writeoff_flag) issues.push('Insurance write-off recorded');
@@ -282,6 +308,29 @@ export function renderCover(payload: ReportPayload, opts: CoverOptions = {}): st
   );
 
   const logoSrc = readAssetDataUrl('logo.png', 'image/png');
+  const vin = pickVin(payload);
+
+  const imageHtml = imageSrc
+    ? `<img class="cover-vehicle-img" src="${escAttr(imageSrc)}" alt="${escAttr(headlineCore)}" />`
+    : '';
+
+  const specCards = [
+    { icon: ICONS.engine, label: 'Engine Size', value: engineSizeLabel(v) },
+    { icon: ICONS.fuel, label: 'Fuel', value: v.fuel_type || '—' },
+    { icon: ICONS.gearbox, label: 'Gearbox', value: v.transmission || '—' },
+    { icon: ICONS.colour, label: 'Colour', value: v.colour || '—' },
+  ]
+    .map(
+      (s) => `
+        <div class="cover-spec">
+          ${s.icon}
+          <div class="cover-spec-text">
+            <div class="cover-spec-label">${esc(s.label)}</div>
+            <div class="cover-spec-value">${esc(s.value)}</div>
+          </div>
+        </div>`,
+    )
+    .join('');
 
   return `
     <section class="cover">
@@ -295,38 +344,39 @@ export function renderCover(payload: ReportPayload, opts: CoverOptions = {}): st
         </div>
         <div class="plate-wrap">
           <div class="plate-label">REGISTRATION</div>
-          <span class="plate">${esc(vrm)}</span>
-          ${(() => {
-            const vin = pickVin(payload);
-            return vin
-              ? `<div class="vin-row"><span class="vin-label">VIN</span><span class="vin-value mono">${esc(vin)}</span></div>`
-              : '';
-          })()}
+          <span class="plate">${esc(formatVrmDisplay(vrm))}</span>
         </div>
       </div>
 
-      <div class="cover-title">
-        <div>
-          <h1>${esc(year)} ${esc(make)} ${esc(model)}</h1>
-          <div class="sub">${esc(derivative || '')}</div>
-          <div class="meta">
-            Report ID: <strong>${esc(payload.id || '—')}</strong> &nbsp;·&nbsp;
-            Generated <strong>${esc(fmtDate(generated))}</strong>
+      <div class="cover-body${imageSrc ? '' : ' cover-body--no-image'}">
+        <div class="cover-identity">
+          <h1>${esc(headlineCore || '—')}</h1>
+          ${trim ? `<div class="cover-trim">${esc(trim)}</div>` : ''}
+          <div class="cover-quick-stats">
+            ${year ? `<span class="cover-quick">${ICONS.calendar}<span>${esc(String(year))}</span></span>` : ''}
+            ${year ? `<span class="cover-quick-sep"></span>` : ''}
+            <span class="cover-quick${payload.latest_mileage == null ? ' unavailable' : ''}">${ICONS.mileage}<span>${esc(mileageText)}</span></span>
           </div>
+          ${
+            vin
+              ? `<div class="vin-row"><span class="vin-label">VIN</span><span class="vin-value mono">${esc(vin)}</span></div>`
+              : ''
+          }
         </div>
-        <div class="hero-stats">
-          <div class="hero-stat">
-            <div class="label">Mileage</div>
-            <div class="value${payload.latest_mileage == null ? ' unavailable' : ''}">${
-              payload.latest_mileage == null
-                ? 'Unavailable'
-                : esc(fmtMileage(payload.latest_mileage))
-            }</div>
-          </div>
-          <div class="hero-stat"><div class="label">Fuel</div><div class="value">${esc(v.fuel_type || '—')}</div></div>
-          <div class="hero-stat"><div class="label">Gearbox</div><div class="value">${esc(v.transmission || '—')}</div></div>
-          <div class="hero-stat"><div class="label">Colour</div><div class="value">${esc(v.colour || '—')}</div></div>
+
+        ${
+          imageSrc
+            ? `<div class="cover-vehicle">${imageHtml}</div>`
+            : ''
+        }
+
+        <div class="cover-specs">
+          ${specCards}
         </div>
+      </div>
+
+      <div class="cover-meta">
+        Report ID: ${esc(payload.id || '—')} &nbsp;·&nbsp; Generated ${esc(fmtDate(generated))}
       </div>
     </section>
 
@@ -345,7 +395,5 @@ export function renderCover(payload: ReportPayload, opts: CoverOptions = {}): st
       <div class="section-title"><span class="icon">i</span> Key Observations</div>
       ${observationsHtml(payload)}
     </section>
-
-    ${vehicleImageHtml(payload, vrm, year, make, model)}
   `;
 }

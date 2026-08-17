@@ -209,18 +209,24 @@ tbody tr:last-child td { border-bottom: none; }
   overflow: hidden;
 }
 
-/* ---------- Cover ---------- */
+/* ---------- Cover (premium Motovo banner) ---------- */
 .cover {
   position: relative;
-  padding: 12px 14px;
+  padding: 14px 16px 12px;
   border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, #163B5F 0%, #1F4F7E 65%, #2C5C8C 100%);
+  background:
+    radial-gradient(ellipse 55% 80% at 48% 60%, rgba(60, 110, 160, 0.35) 0%, transparent 70%),
+    linear-gradient(135deg, #0F2A45 0%, #163B5F 45%, #1A456E 100%);
   color: #FFFFFF;
   overflow: hidden;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 .cover .cover-bar {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: flex-start; justify-content: space-between;
   gap: 12px;
+  position: relative;
+  z-index: 2;
 }
 .cover .brand {
   display: inline-flex; align-items: center; gap: 10px;
@@ -237,58 +243,165 @@ tbody tr:last-child td { border-bottom: none; }
   font-weight: 800; font-size: 14pt; letter-spacing: -0.02em;
 }
 .cover .brand .brand-sub {
-  opacity: 0.85; font-size: 8.5pt; margin-top: 2px;
+  opacity: 0.85; font-size: 8.5pt; margin-top: 3px;
 }
 .cover .plate-wrap {
-  display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 3px;
 }
 .cover .plate-label {
   font-size: 7pt; opacity: 0.75; letter-spacing: 0.12em; text-transform: uppercase;
 }
-.cover .vin-row {
+
+.cover .cover-body {
+  display: grid;
+  grid-template-columns: 1.15fr 1.2fr 1fr;
+  gap: 10px 14px;
+  align-items: center;
+  margin-top: 10px;
+  min-height: 148px;
+  position: relative;
+  z-index: 1;
+}
+.cover .cover-body--no-image {
+  grid-template-columns: 1.35fr 1fr;
+  min-height: 118px;
+}
+
+.cover .cover-identity {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  padding-bottom: 4px;
+}
+.cover h1 {
+  color: #FFFFFF;
+  font-size: 18pt;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+.cover .cover-trim {
+  font-size: 12pt;
+  font-weight: 700;
+  color: #6EB6E8;
+  letter-spacing: 0.02em;
+}
+.cover .cover-quick-stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   margin-top: 6px;
+  font-size: 10pt;
+  font-weight: 600;
+  opacity: 0.95;
+}
+.cover .cover-quick {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.cover .cover-quick.unavailable { opacity: 0.75; font-weight: 500; }
+.cover .cover-quick-sep {
+  width: 1px;
+  height: 14px;
+  background: rgba(255,255,255,0.35);
+}
+.cover .cover-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+.cover .cover-identity .vin-row {
+  margin-top: 8px;
   display: inline-flex; align-items: center; gap: 6px;
   background: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.18);
   border-radius: 6px;
   padding: 2px 8px;
+  align-self: flex-start;
 }
 .cover .vin-row .vin-label {
   font-size: 7pt; opacity: 0.7; letter-spacing: 0.12em; text-transform: uppercase;
 }
 .cover .vin-row .vin-value {
-  font-size: 9pt; font-weight: 700; letter-spacing: 0.04em;
+  font-size: 8.5pt; font-weight: 700; letter-spacing: 0.04em;
   color: #FFFFFF;
 }
 
-.cover .cover-title {
-  margin-top: 12px;
-  display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px; align-items: end;
+.cover .cover-vehicle {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 148px;
+  min-width: 0;
 }
-.cover h1 { color: #FFFFFF; font-size: 20pt; line-height: 1.12; }
-.cover .sub { font-size: 10.5pt; opacity: 0.9; margin-top: 4px; }
-.cover .meta { font-size: 8.5pt; opacity: 0.85; margin-top: 8px; }
-.cover .hero-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
-.cover .hero-stat {
-  background: #FFFFFF14; border: 1px solid #FFFFFF22; border-radius: var(--radius);
-  padding: 6px 10px;
+.cover .cover-vehicle-img {
+  display: block;
+  max-width: 100%;
+  max-height: 148px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35));
 }
-.cover .hero-stat .label { font-size: 7.5pt; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.06em; }
-.cover .hero-stat .value { font-size: 11pt; font-weight: 700; margin-top: 1px; }
-/* Softer weight/size for hero stats that fall back to a "…unavailable"
-   phrase — signals that this is a missing-data notice rather than a value. */
-.cover .hero-stat .value.unavailable { font-size: 9.5pt; font-weight: 600; opacity: 0.8; }
 
-/* Page-break helper — forces the next section onto a new printed page.
-   Used to keep the cover/findings/observations together on page 1 and let
-   the vehicle hero photo open page 2. */
+.cover .cover-specs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+.cover .cover-spec {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 8px 9px;
+}
+.cover .cover-spec .cover-icon {
+  width: 15px;
+  height: 15px;
+  margin-top: 1px;
+  opacity: 0.85;
+}
+.cover .cover-spec-text { min-width: 0; }
+.cover .cover-spec-label {
+  font-size: 6.5pt;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  line-height: 1.2;
+}
+.cover .cover-spec-value {
+  font-size: 10pt;
+  font-weight: 700;
+  margin-top: 1px;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.cover .cover-meta {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.12);
+  font-size: 8pt;
+  opacity: 0.8;
+  position: relative;
+  z-index: 2;
+}
+
+/* Page-break helper — forces the next section onto a new printed page. */
 .section--page-break {
   break-before: page;
   page-break-before: always;
 }
 
-/* Hero vehicle image card (own row). Now that the photo lives on page 2 it
-   has comfortable room to breathe, so we restore a larger silhouette. */
+/* Legacy hero image block kept for any non-cover uses. */
 .vehicle-image-block {
   position: relative;
   width: 100%;
@@ -323,9 +436,9 @@ tbody tr:last-child td { border-bottom: none; }
   font-family: 'JetBrains Mono', 'Menlo', monospace;
   font-weight: 800;
   letter-spacing: 0.08em;
-  font-size: 16pt;
-  padding: 3px 10px;
-  border-radius: 5px;
+  font-size: 14pt;
+  padding: 4px 12px;
+  border-radius: 6px;
   border: 2px solid #111827;
   box-shadow: 0 1px 0 #00000022;
 }
@@ -333,9 +446,7 @@ tbody tr:last-child td { border-bottom: none; }
 
 /* ---------- Findings cards ----------
    The Key Findings tiles get a touch more padding and bigger value type
-   than ordinary cards because they are the visual anchor of page 1, where
-   the vehicle photo no longer sits. The extra space helps the tile grid
-   fill the gap below the cover without feeling sparse. */
+   than ordinary cards because they are the visual anchor of page 1. */
 .findings-grid-block {
   /* Row-level break rules live on .findings-table-row — do not lock the
      whole findings grid onto one page (that left page 1 half empty). */
