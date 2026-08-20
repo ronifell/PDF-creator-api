@@ -365,27 +365,43 @@ tbody tr:last-child td { border-bottom: none; }
 .cover .cover-specs {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
   gap: 8px;
+  align-self: stretch;
+  min-height: 0;
 }
 .cover .cover-spec {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 11px;
+  justify-content: flex-start;
+  text-align: center;
+  gap: 5px;
   background: rgba(255,255,255,0.07);
   border: 1px solid rgba(255,255,255,0.14);
   border-radius: 10px;
-  padding: 12px 13px;
-  min-height: 62px;
+  padding: 10px 8px 8px;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  box-sizing: border-box;
 }
 .cover .cover-spec .cover-icon {
-  width: 26px;
-  height: 26px;
-  margin-top: 0;
+  width: 22px;
+  height: 22px;
+  margin: 0;
   opacity: 0.96;
-  color: #FFFFFF;
+  color: #8EC4EA;
   flex-shrink: 0;
 }
-.cover .cover-spec-text { min-width: 0; flex: 1; }
+.cover .cover-spec-text {
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
 .cover .cover-spec-label {
   font-size: 6.5pt;
   letter-spacing: 0.1em;
