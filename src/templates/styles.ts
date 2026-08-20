@@ -667,6 +667,10 @@ tbody tr:last-child td { border-bottom: none; }
   padding: 0;
   border: none;
 }
+/* Stretch each .val box to the full cell height so all tiles in a row
+   share the same height (e.g. wrapping "Suggested sale price" label). */
+.val-table-row .val-cell { height: 1px; }
+.val-table-row .val-cell .val { height: 100%; box-sizing: border-box; }
 .val {
   border: 1px solid var(--border);
   border-radius: var(--radius);

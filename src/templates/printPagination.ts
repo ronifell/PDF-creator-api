@@ -87,6 +87,27 @@ export function printPaginationScript(): string {
       }
     });
 
+    // Same equalisation for valuation tiles — Chromium print can leave the
+    // featured "Suggested sale price" tile taller than its row neighbours
+    // when the label wraps.
+    document.querySelectorAll('.val-table tr').forEach((tr) => {
+      const cells = Array.from(tr.querySelectorAll('.val-cell:not(.val-cell--empty)'));
+      if (cells.length < 2) return;
+      cells.forEach((c) => {
+        c.style.height = '';
+        const tile = c.querySelector('.val');
+        if (tile) tile.style.height = '';
+      });
+      const maxH = Math.max(...cells.map((c) => c.getBoundingClientRect().height));
+      if (maxH > 0) {
+        cells.forEach((c) => {
+          c.style.height = Math.ceil(maxH) + 'px';
+          const tile = c.querySelector('.val');
+          if (tile) tile.style.height = '100%';
+        });
+      }
+    });
+
     // Disclaimer — never split across pages.
     //
     // Equipment rows use "break-inside: avoid", so Chromium may effectively
