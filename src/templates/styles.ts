@@ -229,10 +229,12 @@ tbody tr:last-child td { border-bottom: none; }
   z-index: 2;
 }
 .cover .brand {
-  display: inline-flex; align-items: center; gap: 11px;
+  display: inline-flex; align-items: stretch; gap: 11px;
 }
 .cover .brand .brand-logo {
-  width: 32px; height: 32px;
+  /* Match stacked "MOTOVO" + "Dealer Vehicle History Report" (15pt + 4px gap + 8.5pt, line-height 1.05). */
+  height: calc(15pt * 1.05 + 4px + 8.5pt * 1.05);
+  width: auto;
   object-fit: contain;
   filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25));
 }
