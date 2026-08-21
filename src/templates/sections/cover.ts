@@ -4,6 +4,7 @@ import { readAssetDataUrl } from '../assets';
 import { gatherObservations } from '../insights';
 import { realWriteoffRecords } from './writeoff';
 import { chunkItems, renderTileTable } from '../tileGrid';
+import { engineLabel, fuelTypeLabel } from './vehicle';
 
 type Tone = 'ok' | 'warn' | 'fail';
 
@@ -221,14 +222,23 @@ function formatVrmDisplay(vrm: string): string {
 }
 
 function engineSizeLabel(vehicle: VehicleInfo | undefined): string {
-  if (vehicle?.engine_size) return vehicle.engine_size;
-  if (vehicle?.engine_capacity_litres != null) {
+  if (!vehicle) return '—';
+  const labelled = engineLabel(vehicle);
+  if (labelled !== '—') return labelled;
+  if (vehicle.engine_capacity_litres != null) {
     return `${vehicle.engine_capacity_litres}L`;
   }
-  if (vehicle?.engine_capacity_cc != null) {
+  if (vehicle.engine_capacity_cc != null) {
     return `${vehicle.engine_capacity_cc}cc`;
   }
   return '—';
+}
+
+/** Short enough for the cover spec tiles ("Automatic" overflows the box). */
+function compactTransmission(transmission: string | undefined): string {
+  const raw = (transmission || '').trim();
+  if (!raw) return '—';
+  return raw.replace(/\bAutomatic\b/gi, 'Auto');
 }
 
 /** Inline SVG icons for the premium cover banner (print-safe).
@@ -328,19 +338,17 @@ export function renderCover(payload: ReportPayload, opts: CoverOptions = {}): st
       : `<h1>${esc(headlineCore || '—')}</h1>`;
 
   const specCards = [
-    { icon: ICONS.engine, label: 'Engine Size', value: engineSizeLabel(v) },
-    { icon: ICONS.fuel, label: 'Fuel', value: v.fuel_type || '—' },
-    { icon: ICONS.gearbox, label: 'Gearbox', value: v.transmission || '—' },
+    { icon: ICONS.engine, label: 'Engine', value: engineSizeLabel(v) },
+    { icon: ICONS.fuel, label: 'Fuel', value: fuelTypeLabel(v) },
+    { icon: ICONS.gearbox, label: 'Gearbox', value: compactTransmission(v.transmission) },
     { icon: ICONS.colour, label: 'Colour', value: v.colour || '—' },
   ]
     .map(
       (s) => `
         <div class="cover-spec">
           ${s.icon}
-          <div class="cover-spec-text">
-            <div class="cover-spec-label">${esc(s.label)}</div>
-            <div class="cover-spec-value">${esc(s.value)}</div>
-          </div>
+          <div class="cover-spec-label">${esc(s.label)}</div>
+          <div class="cover-spec-value">${esc(s.value)}</div>
         </div>`,
     )
     .join('');

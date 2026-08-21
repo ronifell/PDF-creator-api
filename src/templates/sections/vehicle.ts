@@ -61,7 +61,7 @@ function powertrainLabel(v: VehicleInfo): string {
   if (combined.includes('mhev') || combined.includes('mild')) return 'Mild hybrid';
   if (combined.includes('phev') || combined.includes('plug')) return 'Plug-in hybrid';
   if (combined.includes('hybrid') || combined.includes('hev')) return 'Full hybrid';
-  if (isPureElectric(v.fuel_type)) return 'Electric';
+  if (isPureElectricVehicle(v)) return 'Electric';
   if (v.powertrain_type) {
     // Title-case the raw value if we have no better label.
     const raw = v.powertrain_type.trim();
@@ -70,32 +70,51 @@ function powertrainLabel(v: VehicleInfo): string {
   return 'ICE';
 }
 
+function isHybridVehicle(v: VehicleInfo): boolean {
+  return isHybridFuel(v.fuel_type) || isHybridFuel(v.powertrain_type);
+}
+
+function isPureElectricVehicle(v: VehicleInfo): boolean {
+  if (isHybridVehicle(v)) return false;
+  return isPureElectric(v.fuel_type) || isPureElectric(v.powertrain_type);
+}
+
 /**
  * Human-readable "Engine" label.
  *
- * The upstream `engine_size` field is often a bare "1.5L" or similar. That
- * looks wrong on a hybrid (which has an ICE + electric motor combo) and even
- * more wrong on the pure EVs where the feed sometimes literally sends
- * "Electric motor" as the engine string alongside a 1,499cc capacity from a
- * previous ICE version of the trim.
+ * Hybrid size and fuel are split across two fields so a 1-series MHEV reads
+ * Engine "1.5L - Hybrid" and Fuel type "Petrol", rather than cramming
+ * "1.5L petrol hybrid" onto one line (or showing Fuel type as "Hybrid").
  *
  * Rules:
- *   • Pure EV → "Electric motor" (capacity/torque/power still show if given)
- *   • Hybrid with a real combustion capacity → "1.5L petrol hybrid" (or
- *     diesel hybrid). The size is derived from `engine_size` if it looks
- *     numeric, otherwise from `engine_capacity_litres`, otherwise from cc.
+ *   • Pure EV → "Electric motor"
+ *   • Hybrid with a combustion capacity → "1.5L - Hybrid"
+ *   • Hybrid with no size → "Hybrid"
  *   • Otherwise → the raw `engine_size` string.
  */
-function engineLabel(v: VehicleInfo): string {
-  if (isPureElectric(v.fuel_type)) return 'Electric motor';
-  if (isHybridFuel(v.fuel_type)) {
+export function engineLabel(v: VehicleInfo): string {
+  if (isPureElectricVehicle(v)) return 'Electric motor';
+  if (isHybridVehicle(v)) {
     const combustionLabel = deriveCombustionLabel(v);
-    const combustionFuel = deriveCombustionFuel(v);
-    return combustionLabel
-      ? `${combustionLabel} ${combustionFuel} hybrid`
-      : `${combustionFuel} hybrid`;
+    return combustionLabel ? `${combustionLabel} - Hybrid` : 'Hybrid';
   }
   return v.engine_size && v.engine_size.trim() ? v.engine_size : '—';
+}
+
+/**
+ * Fuel type for display. Hybrids report the ICE fuel (Petrol / Diesel);
+ * "Hybrid" itself belongs on the Engine line.
+ */
+export function fuelTypeLabel(v: VehicleInfo): string {
+  if (isPureElectricVehicle(v)) {
+    const raw = (v.fuel_type || '').trim();
+    return raw || 'Electric';
+  }
+  if (isHybridVehicle(v)) {
+    const fuel = deriveCombustionFuel(v);
+    return fuel.charAt(0).toUpperCase() + fuel.slice(1);
+  }
+  return v.fuel_type && v.fuel_type.trim() ? v.fuel_type : '—';
 }
 
 function deriveCombustionLabel(v: VehicleInfo): string {
@@ -111,7 +130,7 @@ function deriveCombustionLabel(v: VehicleInfo): string {
 }
 
 function deriveCombustionFuel(v: VehicleInfo): string {
-  const f = (v.fuel_type || '').toLowerCase();
+  const f = `${v.fuel_type || ''} ${v.powertrain_type || ''}`.toLowerCase();
   if (f.includes('diesel')) return 'diesel';
   if (f.includes('petrol') || f.includes('gasoline') || f.includes('unleaded')) return 'petrol';
   // Hybrids that don't identify the ICE fuel — default to petrol which is the
@@ -121,7 +140,7 @@ function deriveCombustionFuel(v: VehicleInfo): string {
 
 export function renderVehicleOverview(payload: ReportPayload): string {
   const v = payload.report_data?.vehicle || {};
-  const pureEv = isPureElectric(v.fuel_type);
+  const pureEv = isPureElectricVehicle(v);
 
   const leftRows = [
     row('Make', esc(v.make)),
@@ -137,7 +156,7 @@ export function renderVehicleOverview(payload: ReportPayload): string {
   ].join('');
 
   const rightRows = [
-    row('Fuel type', esc(v.fuel_type)),
+    row('Fuel type', esc(fuelTypeLabel(v))),
     row('Powertrain', esc(powertrainLabel(v))),
     row('Transmission', `${esc(v.transmission)}${v.number_of_gears ? ` · ${esc(v.number_of_gears)}-speed` : ''}`),
     row('Drive', esc(v.drive_type)),

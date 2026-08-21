@@ -133,8 +133,8 @@ small, .small { font-size: 8.5pt; color: var(--muted-fg); }
 /* Definition-list style key/value rows for spec sheets */
 .kv {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2px 14px;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.15fr);
+  gap: 2px 12px;
 }
 .kv .row {
   display: contents;
@@ -144,6 +144,7 @@ small, .small { font-size: 8.5pt; color: var(--muted-fg); }
   font-size: 9.25pt;
   padding: 4px 0;
   border-bottom: 1px dashed var(--border);
+  min-width: 0;
 }
 .kv .v {
   color: var(--fg);
@@ -152,6 +153,8 @@ small, .small { font-size: 8.5pt; color: var(--muted-fg); }
   border-bottom: 1px dashed var(--border);
   text-align: right;
   font-weight: 500;
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 .kv .row:last-child .k,
 .kv .row:last-child .v { border-bottom: none; }
@@ -371,12 +374,12 @@ tbody tr:last-child td { border-bottom: none; }
   min-height: 0;
 }
 .cover .cover-spec {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
+  display: grid;
+  grid-template-rows: 24px 1.35em 1fr;
+  justify-items: center;
+  align-items: start;
   text-align: center;
-  gap: 5px;
+  gap: 4px;
   background: rgba(255,255,255,0.07);
   border: 1px solid rgba(255,255,255,0.14);
   border-radius: 10px;
@@ -392,31 +395,27 @@ tbody tr:last-child td { border-bottom: none; }
   margin: 0;
   opacity: 0.96;
   color: #8EC4EA;
-  flex-shrink: 0;
-}
-.cover .cover-spec-text {
-  min-width: 0;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
 }
 .cover .cover-spec-label {
   font-size: 6.5pt;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(190, 210, 230, 0.85);
-  line-height: 1.2;
+  line-height: 1.35em;
+  height: 1.35em;
   font-weight: 600;
+  white-space: nowrap;
 }
 .cover .cover-spec-value {
-  font-size: 11pt;
+  font-size: 10pt;
   font-weight: 700;
-  margin-top: 2px;
+  margin-top: 0;
   line-height: 1.2;
+  overflow-wrap: break-word;
   word-break: break-word;
   color: #FFFFFF;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .cover .cover-meta {
