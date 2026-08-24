@@ -260,11 +260,11 @@ tbody tr:last-child td { border-bottom: none; }
 
 .cover .cover-body {
   display: grid;
-  grid-template-columns: 1.05fr 1.25fr 1.05fr;
+  grid-template-columns: 1fr 1.45fr 1fr;
   gap: 12px 16px;
   align-items: center;
   margin-top: 14px;
-  min-height: 168px;
+  min-height: 220px;
   position: relative;
   z-index: 1;
 }
@@ -348,21 +348,25 @@ tbody tr:last-child td { border-bottom: none; }
 }
 
 .cover .cover-vehicle {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  height: 168px;
   min-width: 0;
+  min-height: 240px;
+  align-self: stretch;
 }
 .cover .cover-vehicle-img {
   display: block;
-  max-width: 100%;
-  max-height: 168px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 48%;
+  max-height: 78%;
   width: auto;
   height: auto;
   object-fit: contain;
-  object-position: center bottom;
+  object-position: center center;
   filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.4));
+  z-index: 1;
+  pointer-events: none;
 }
 
 .cover .cover-specs {
